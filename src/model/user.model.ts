@@ -19,7 +19,7 @@ export const userSchema = new mongoose.Schema(
       {
         boardName: String,
         passingYear: Number,
-        marksPercentage: Number,
+        marksPercentage: String,
       },
     ],
     workDetail: [
@@ -41,6 +41,8 @@ export const userSchema = new mongoose.Schema(
       ifsc: String,
       branchName: String,
     },
+    activeStatus: Boolean,
+    createdBy: String,
   },
   {
     timestamps: true,
