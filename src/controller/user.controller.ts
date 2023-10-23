@@ -25,15 +25,25 @@ const generateActivationKey = async (req: Request, res: Response) => {
         .status(StatusCodes.NOT_ACCEPTABLE)
         .json({ message: "user already register" });
     } else {
-      const activationKey = `${reqData.substring(
+      // const activationKey = `${reqData.name.slice(
+      //   0,
+      //   2
+      // )}${reqData.username.slice(2, 2)}${reqData.mobile.slice(
+      //   4,
+      //   3
+      // )}${reqData.role.slice(0, 1)}${new Date(reqData.dob)
+      //   .toString()
+      //   .slice(0, 2)}${new Date().toString().slice(0, 2)}`;
+
+      const activationKey = `${reqData.name.slice(
         0,
         2
-      )}${reqData.username.substring(2, 2)}${reqData.mobile.substring(
-        4,
-        3
-      )}${reqData.role.substring(0, 1)}${new Date(reqData.dob)
+      )}${reqData.username.slice(0, 2)}${reqData.mobile
         .toString()
-        .substring(0, 2)}${new Date().toString().substring(0, 2)}`;
+        .slice(4, 3)}${reqData.role.slice(0, 1)}${new Date(reqData.dob)
+        .toString()
+        .slice(0, 2)}${new Date().toString().slice(0, 2)}`;
+
       const userData = new user({
         name: reqData.name,
         username: reqData.username,
@@ -41,7 +51,7 @@ const generateActivationKey = async (req: Request, res: Response) => {
         mobile: reqData.mobile,
         dob: reqData.dob,
         role: reqData.role,
-        activationCode: activationKey,
+        activationCode: activationKey.toUpperCase(),
       });
       const saveUser = await userData.save();
       res.status(StatusCodes.OK).json({
@@ -49,7 +59,9 @@ const generateActivationKey = async (req: Request, res: Response) => {
         activationKey: saveUser.activationCode,
       });
     }
-  } catch (error) {}
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error });
+  }
 };
 
 export { generateActivationKey };

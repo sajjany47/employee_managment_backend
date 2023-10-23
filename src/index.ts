@@ -16,7 +16,8 @@ function main() {
   app.use("/employee/api", routes);
   mongoose
     .connect(
-      "mongodb+srv://sajjany47:s%40JJAN888@cluster0.g6om3i4.mongodb.net/employee?retryWrites=true&w=majority"
+      // "mongodb+srv://sajjany47:s%40JJAN888@cluster0.g6om3i4.mongodb.net/employee?retryWrites=true&w=majority",
+      "mongodb://localhost:27017/employee"
     )
     .then(() => {
       console.log("Database Connected Successfully");
