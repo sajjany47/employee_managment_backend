@@ -131,9 +131,46 @@ const forgetPassword = async (req: Request, res: Response) => {
   }
 };
 
+const login = async (req: Request, res: Response) => {
+  try {
+    const reqData: any = Object.assign({}, req.body);
+    console.log(reqData);
+    const checkUser: any = await user.findOne({
+      $or: [
+        { username: reqData.userId },
+        { email: reqData.userId },
+        { mobile: parseInt(reqData.userId) },
+      ],
+    });
+    if (checkUser) {
+      const verifyPassword = await bcrypt.compare(
+        reqData.password,
+        checkUser.password
+      );
+      if (verifyPassword) {
+        const token = jwt.sign({ _id: checkUser._id }, "sajjanan", {
+          expiresIn: "6h",
+        });
+        const userData: any = checkUser.populate({ password: 0 });
+        res.status(StatusCodes.OK).json({ user: userData, token: token });
+      } else {
+        res
+          .status(StatusCodes.UNAUTHORIZED)
+          .json({ message: "invalid password" });
+      }
+    } else {
+      res.status(StatusCodes.NOT_FOUND).json({ message: "invalid user" });
+    }
+  } catch (error: any) {
+    console.log(error);
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error });
+  }
+};
+
 export {
   generateActivationKey,
   forgetPassword,
   userUpdate,
   checkActivationKey,
+  login,
 };
