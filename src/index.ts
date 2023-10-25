@@ -10,12 +10,12 @@ function main() {
   const mongodb_url: any = process.env.mongodb_url;
   const cookieSecretKey: any = process.env.COOKIE_SECRET;
   const app = express();
-  const corsOptions = {
-    origin: "http://localhost:8081",
-  };
+  // const corsOptions = {
+  //   origin: "http://localhost:8081",
+  // };
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ limit: "30 mb", extended: true }));
-  app.use(cors(corsOptions));
+  app.use(cors());
   app.use("/employee/api", routes);
   app.use(
     cookiesession({
