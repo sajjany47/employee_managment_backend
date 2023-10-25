@@ -27,7 +27,6 @@ const generateActivationKey = async (req: Request, res: Response) => {
         .json({ message: "user already register" });
     } else {
       const activationKey = nanoid();
-      console.log(activationKey);
 
       const userData = new user({
         name: reqData.name,
@@ -47,7 +46,7 @@ const generateActivationKey = async (req: Request, res: Response) => {
       });
     }
   } catch (error: any) {
-    res.status(StatusCodes.BAD_REQUEST).json({ message: error });
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
 };
 
@@ -68,7 +67,7 @@ const checkActivationKey = async (req: Request, res: Response) => {
         .json({ message: "invalid activation key" });
     }
   } catch (error: any) {
-    res.status(StatusCodes.BAD_REQUEST).json({ message: error });
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
 };
 
@@ -98,7 +97,7 @@ const userUpdate = async (req: Request, res: Response) => {
         .json({ message: "invalid activation code" });
     }
   } catch (error: any) {
-    res.status(StatusCodes.BAD_REQUEST).json({ message: error });
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
 };
 
@@ -122,7 +121,7 @@ const forgetPassword = async (req: Request, res: Response) => {
       res.status(StatusCodes.NOT_FOUND).json({ message: "User not found" });
     }
   } catch (error: any) {
-    res.status(StatusCodes.BAD_REQUEST).json({ message: error });
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
 };
 
