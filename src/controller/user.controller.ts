@@ -144,7 +144,8 @@ const login = async (req: Request, res: Response) => {
           checkUser.password
         );
         if (verifyPassword) {
-          const token = jwt.sign({ _id: checkUser._id }, "sajjanan", {
+          const scretKey: any = process.env.secret_Key;
+          const token = jwt.sign({ _id: checkUser._id }, scretKey, {
             expiresIn: "6h",
           });
           // const userData: any = delete checkUser.password;
@@ -167,10 +168,30 @@ const login = async (req: Request, res: Response) => {
   }
 };
 
+const activeStatus = async (req: Request, res: Response) => {
+  try {
+    const reqData: any = Object.assign({}, req.body);
+    const validUser = await user.findOne({ username: reqData.username });
+    if (validUser) {
+      validUser.activeStatus = reqData.activeStatus;
+      validUser.updatedBy = reqData.updatedBy;
+      validUser.save();
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "user status updated successfully" });
+    } else {
+      res.status(StatusCodes.NOT_FOUND).json({ message: "user not found" });
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 export {
   generateActivationKey,
   forgetPassword,
   userUpdate,
   checkActivationKey,
   login,
+  activeStatus,
 };

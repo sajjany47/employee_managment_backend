@@ -3,9 +3,12 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import routes from "./routes/routes";
-const port = 8081;
+import cookiesession from "cookie-session";
 
 function main() {
+  const port = process.env.PORT || 8081;
+  const mongodb_url: any = process.env.mongodb_url;
+  const cookieSecretKey: any = process.env.COOKIE_SECRET;
   const app = express();
   const corsOptions = {
     origin: "http://localhost:8081",
@@ -14,11 +17,15 @@ function main() {
   app.use(bodyParser.urlencoded({ limit: "30 mb", extended: true }));
   app.use(cors(corsOptions));
   app.use("/employee/api", routes);
+  app.use(
+    cookiesession({
+      name: "employee-session",
+      keys: [cookieSecretKey],
+      httpOnly: true,
+    })
+  );
   mongoose
-    .connect(
-      // "mongodb+srv://sajjany47:s%40JJAN888@cluster0.g6om3i4.mongodb.net/employee?retryWrites=true&w=majority",
-      "mongodb://localhost:27017/employee"
-    )
+    .connect(mongodb_url)
     .then(() => {
       console.log("Database Connected Successfully");
       app.listen(port, () => {

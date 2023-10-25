@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  activeStatus,
   checkActivationKey,
   forgetPassword,
   generateActivationKey,
@@ -13,5 +14,6 @@ routes.route("/activation-code").post(generateActivationKey);
 routes.route("/check-activation-key").post(checkActivationKey);
 routes.route("/user-update").post(userUpdate);
 routes.route("/forget-password").post(forgetPassword);
+routes.route("/change-status").post(activeStatus);
 
 export default routes;

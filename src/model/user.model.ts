@@ -43,6 +43,7 @@ export const userSchema = new mongoose.Schema(
     },
     activeStatus: Boolean,
     createdBy: String,
+    updatedBy: String,
   },
   {
     timestamps: true,
