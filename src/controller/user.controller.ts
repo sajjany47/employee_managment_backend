@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import user from "../model/user.model";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { nanoid } from "nanoid";
 
 const generateActivationKey = async (req: Request, res: Response) => {
   try {
@@ -25,14 +26,8 @@ const generateActivationKey = async (req: Request, res: Response) => {
         .status(StatusCodes.NOT_ACCEPTABLE)
         .json({ message: "user already register" });
     } else {
-      const activationKey = `${reqData.name.slice(
-        0,
-        2
-      )}${reqData.username.slice(0, 2)}${reqData.mobile
-        .toString()
-        .slice(4, 8)}${reqData.role.slice(0, 1)}${new Date(reqData.dob)
-        .toString()
-        .slice(0, 2)}${new Date().toString().slice(0, 2)}`;
+      const activationKey = nanoid();
+      console.log(activationKey);
 
       const userData = new user({
         name: reqData.name,
@@ -41,7 +36,7 @@ const generateActivationKey = async (req: Request, res: Response) => {
         mobile: reqData.mobile,
         dob: reqData.dob,
         role: reqData.role,
-        activationCode: activationKey.toUpperCase(),
+        activationCode: activationKey,
         createdBy: reqData.createdBy,
         activeStatus: false,
       });
@@ -134,36 +129,41 @@ const forgetPassword = async (req: Request, res: Response) => {
 const login = async (req: Request, res: Response) => {
   try {
     const reqData: any = Object.assign({}, req.body);
-    console.log(reqData);
     const checkUser: any = await user.findOne({
       $or: [
         { username: reqData.userId },
         { email: reqData.userId },
-        { mobile: parseInt(reqData.userId) },
+        // { mobile: parseInt(reqData.userId) },
       ],
     });
+
     if (checkUser) {
-      const verifyPassword = await bcrypt.compare(
-        reqData.password,
-        checkUser.password
-      );
-      if (verifyPassword) {
-        const token = jwt.sign({ _id: checkUser._id }, "sajjanan", {
-          expiresIn: "6h",
-        });
-        const userData: any = checkUser.populate({ password: 0 });
-        res.status(StatusCodes.OK).json({ user: userData, token: token });
+      if (checkUser.activeStatus === true) {
+        const verifyPassword = await bcrypt.compare(
+          reqData.password,
+          checkUser.password
+        );
+        if (verifyPassword) {
+          const token = jwt.sign({ _id: checkUser._id }, "sajjanan", {
+            expiresIn: "6h",
+          });
+          // const userData: any = delete checkUser.password;
+          res.status(StatusCodes.OK).json({ user: checkUser, token: token });
+        } else {
+          res
+            .status(StatusCodes.UNAUTHORIZED)
+            .json({ message: "invalid password" });
+        }
       } else {
         res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ message: "invalid password" });
+          .status(StatusCodes.NOT_ACCEPTABLE)
+          .json({ message: "user disabled" });
       }
     } else {
       res.status(StatusCodes.NOT_FOUND).json({ message: "invalid user" });
     }
   } catch (error: any) {
-    console.log(error);
-    res.status(StatusCodes.BAD_REQUEST).json({ message: error });
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
 };
 
