@@ -21,7 +21,7 @@ const timeData = async (req: Request, res: Response, next: NextFunction) => {
         const modifyData = [
           {
             date: dateFormat,
-            time: b.diff(b, "minutes"),
+            time: b.diff(a, "minutes"),
           },
         ];
 
