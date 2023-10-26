@@ -147,7 +147,8 @@ const login = async (req: Request, res: Response) => {
           const token = jwt.sign({ _id: checkUser._id }, scretKey, {
             expiresIn: "6h",
           });
-          // const userData: any = delete checkUser.password;
+          const userData: any = checkUser.project({ password: 0 });
+          console.log(userData);
           res.status(StatusCodes.OK).json({ user: checkUser, token: token });
         } else {
           res
