@@ -20,6 +20,8 @@ const timeData = async (req: Request, res: Response, next: NextFunction) => {
 
         const modifyData = [
           {
+            startTime: a,
+            endTime: b,
             date: dateFormat,
             time: b.diff(a, "minutes"),
           },
