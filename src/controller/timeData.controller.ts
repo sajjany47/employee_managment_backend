@@ -13,6 +13,42 @@ const timeData = async (req: Request, res: Response, next: NextFunction) => {
         username: reqData.username,
       });
       if (checkUser) {
+        let existingData: any[] = checkUser.timeSchedule;
+        const findDateIndex: any = existingData.findIndex(
+          (item: any) => item.date === moment(reqData.date).format("DD/MM/YYYY")
+        );
+        if (findDateIndex > -1) {
+          const indexData = existingData[findDateIndex];
+          const a: any = new Date(reqData.startTime);
+          const b: any = new Date(reqData.endTime);
+          indexData.startTime = a;
+          indexData.endTime = b;
+          indexData.totalTime = indexData.totalTime + b.diff(a, "minutes");
+          existingData[findDateIndex] = indexData;
+
+          const saveTimeData: any = await timeRecord.updateOne(
+            { username: reqData.username },
+            { $set: { timeSchedule: existingData } }
+          );
+          res.status(StatusCodes.OK).json({ message: "Added successfully" });
+        } else {
+          const dateFormat = moment(reqData.date).format("DD/MM/YYYY");
+          const a: any = new Date(reqData.startTime);
+          const b: any = new Date(reqData.endTime);
+
+          existingData.push({
+            startTime: a,
+            endTime: b,
+            date: dateFormat,
+            totalTime: b.diff(a, "minutes"),
+          });
+
+          const saveTimeData: any = await timeRecord.updateOne(
+            { username: reqData.username },
+            { $set: { timeSchedule: existingData } }
+          );
+          res.status(StatusCodes.OK).json({ message: "Added successfully" });
+        }
       } else {
         const dateFormat = moment(reqData.date).format("DD/MM/YYYY");
         const a: any = new Date(reqData.startTime);
@@ -23,7 +59,7 @@ const timeData = async (req: Request, res: Response, next: NextFunction) => {
             startTime: a,
             endTime: b,
             date: dateFormat,
-            time: b.diff(a, "minutes"),
+            totalTime: b.diff(a, "minutes"),
           },
         ];
 
@@ -37,5 +73,9 @@ const timeData = async (req: Request, res: Response, next: NextFunction) => {
     } else {
       res.status(StatusCodes.NOT_FOUND).json({ message: "user not found" });
     }
-  } catch (error) {}
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
 };
+
+export { timeData };

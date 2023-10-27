@@ -6,7 +6,7 @@ const timeData = new mongoose.Schema(
     timeSchedule: [
       {
         startTime: Date,
-        endTime: DataTransfer,
+        endTime: Date,
         date: Date,
         totalTime: Number,
       },

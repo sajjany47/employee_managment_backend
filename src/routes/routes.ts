@@ -8,6 +8,7 @@ import {
   userUpdate,
 } from "../controller/user.controller";
 import { auth } from "../middleware/auth.middleware";
+import { timeData } from "../controller/timeData.controller";
 
 const routes = express.Router();
 routes.route("/sigin").post(login);
@@ -16,5 +17,6 @@ routes.route("/check-activation-key").post(checkActivationKey);
 routes.route("/user-update").post(userUpdate);
 routes.route("/forget-password").post(forgetPassword);
 routes.route("/change-status").post(auth, activeStatus);
+routes.route("/time-record").post(timeData);
 
 export default routes;
