@@ -132,7 +132,7 @@ const login = async (req: Request, res: Response) => {
       $or: [
         { username: reqData.userId },
         { email: reqData.userId },
-        // { mobile: parseInt(reqData.userId) },
+        { mobile: reqData.userId },
       ],
     });
 

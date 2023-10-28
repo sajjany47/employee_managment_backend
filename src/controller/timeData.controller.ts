@@ -7,6 +7,9 @@ import moment from "moment";
 const timeData = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const reqData: any = Object.assign({}, req.body);
+    const dateFormat = moment(reqData.date).format("DD/MM/YYYY");
+    const a: any = moment(reqData.startTime).format("YYYY-MM-DD HH:mm:ss");
+    const b: any = moment(reqData.endTime).format("YYYY-MM-DD HH:mm:ss");
     const validUser = await user.findOne({ username: reqData.username });
     if (validUser) {
       const checkUser = await timeRecord.findOne({
@@ -15,15 +18,14 @@ const timeData = async (req: Request, res: Response, next: NextFunction) => {
       if (checkUser) {
         let existingData: any[] = checkUser.timeSchedule;
         const findDateIndex: any = existingData.findIndex(
-          (item: any) => item.date === moment(reqData.date).format("DD/MM/YYYY")
+          (item: any) => item.date === dateFormat
         );
         if (findDateIndex > -1) {
           const indexData = existingData[findDateIndex];
-          const a: any = new Date(reqData.startTime);
-          const b: any = new Date(reqData.endTime);
           indexData.startTime = a;
           indexData.endTime = b;
-          indexData.totalTime = indexData.totalTime + b.diff(a, "minutes");
+          indexData.totalTime =
+            indexData.totalTime + moment(b).diff(a, "minutes");
           existingData[findDateIndex] = indexData;
 
           const saveTimeData: any = await timeRecord.updateOne(
@@ -32,15 +34,11 @@ const timeData = async (req: Request, res: Response, next: NextFunction) => {
           );
           res.status(StatusCodes.OK).json({ message: "Added successfully" });
         } else {
-          const dateFormat = moment(reqData.date).format("DD/MM/YYYY");
-          const a: any = new Date(reqData.startTime);
-          const b: any = new Date(reqData.endTime);
-
           existingData.push({
             startTime: a,
             endTime: b,
             date: dateFormat,
-            totalTime: b.diff(a, "minutes"),
+            totalTime: moment(b).diff(a, "minutes"),
           });
 
           const saveTimeData: any = await timeRecord.updateOne(
@@ -50,16 +48,12 @@ const timeData = async (req: Request, res: Response, next: NextFunction) => {
           res.status(StatusCodes.OK).json({ message: "Added successfully" });
         }
       } else {
-        const dateFormat = moment(reqData.date).format("DD/MM/YYYY");
-        const a: any = new Date(reqData.startTime);
-        const b: any = new Date(reqData.endTime);
-
         const modifyData = [
           {
             startTime: a,
             endTime: b,
             date: dateFormat,
-            totalTime: b.diff(a, "minutes"),
+            totalTime: moment(b).diff(a, "minutes"),
           },
         ];
 

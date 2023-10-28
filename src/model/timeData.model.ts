@@ -5,9 +5,9 @@ const timeData = new mongoose.Schema(
     username: String,
     timeSchedule: [
       {
-        startTime: Date,
-        endTime: Date,
-        date: Date,
+        startTime: String,
+        endTime: String,
+        date: String,
         totalTime: Number,
       },
     ],
