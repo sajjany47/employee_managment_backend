@@ -12,11 +12,11 @@ import { timeData } from "../controller/timeData.controller";
 
 const routes = express.Router();
 routes.route("/sigin").post(login);
-routes.route("/activation-code").post(generateActivationKey);
+routes.route("/activation-code").post(auth, generateActivationKey);
 routes.route("/check-activation-key").post(checkActivationKey);
 routes.route("/user-update").post(userUpdate);
 routes.route("/forget-password").post(forgetPassword);
 routes.route("/change-status").post(auth, activeStatus);
-routes.route("/time-record").post(timeData);
+routes.route("/time-record").post(auth, timeData);
 
 export default routes;

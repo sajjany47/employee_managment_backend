@@ -27,7 +27,6 @@ const generateActivationKey = async (req: Request, res: Response) => {
         .json({ message: "user already register" });
     } else {
       const activationKey = nanoid();
-
       const userData = new user({
         name: reqData.name,
         username: reqData.username,
@@ -38,6 +37,7 @@ const generateActivationKey = async (req: Request, res: Response) => {
         activationCode: activationKey,
         createdBy: reqData.createdBy,
         activeStatus: false,
+        registrationStatus: "Pending For User Approved",
       });
       const saveUser = await userData.save();
       res.status(StatusCodes.OK).json({
@@ -77,27 +77,36 @@ const userUpdate = async (req: Request, res: Response) => {
     const validUser = await user.findOne({
       activationCode: reqData.activationCode,
     });
-    if (validUser) {
-      validUser.password = await bcrypt.hash(reqData.password, 10);
-      validUser.address = reqData.address;
-      validUser.state = reqData.state;
-      validUser.district = reqData.district;
-      validUser.city = reqData.city;
-      validUser.pincode = reqData.pincode;
-      validUser.education = reqData.education;
-      validUser.workDetail = reqData.workDetail;
-      validUser.document = reqData.document;
-      validUser.bankDetails = reqData.bankDetails;
-
-      await validUser.save();
-      res.status(StatusCodes.OK).json({ message: "user update successfully" });
-    } else {
-      res
+    if (!validUser) {
+      return res
         .status(StatusCodes.NOT_FOUND)
         .json({ message: "invalid activation code" });
     }
+    if (validUser) {
+      const password = await bcrypt.hash(reqData.password, 10);
+
+      await validUser.updateOne(
+        { activationCode: reqData.activationCode },
+        {
+          password: password,
+          address: reqData.address,
+          state: reqData.state,
+          district: reqData.district,
+          city: reqData.city,
+          pincode: reqData.pincode,
+          education: reqData.education,
+          workDetail: reqData.workDetail,
+          document: reqData.document,
+          bankDetails: reqData.bankDetails,
+          registrationStatus: "Pending For Admin Approved",
+        }
+      );
+      return res
+        .status(StatusCodes.OK)
+        .json({ message: "user update successfully" });
+    }
   } catch (error: any) {
-    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+    return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
 };
 
@@ -158,7 +167,7 @@ const login = async (req: Request, res: Response) => {
       } else {
         res
           .status(StatusCodes.NOT_ACCEPTABLE)
-          .json({ message: "user disabled" });
+          .json({ message: "Pending for Admin Approved" });
       }
     } else {
       res.status(StatusCodes.NOT_FOUND).json({ message: "invalid user" });
@@ -170,17 +179,24 @@ const login = async (req: Request, res: Response) => {
 
 const activeStatus = async (req: Request, res: Response) => {
   try {
-    const reqData: any = Object.assign({}, req.body);
-    const validUser = await user.findOne({ username: reqData.username });
+    const validUser = await user.findOne({ username: req.body.username });
+    if (!validUser)
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "user not found" });
     if (validUser) {
-      validUser.activeStatus = reqData.activeStatus;
-      validUser.updatedBy = reqData.updatedBy;
-      validUser.save();
-      res
+      await user.updateOne(
+        { username: req.body.username },
+        {
+          activeStatus: req.body.activeStatus,
+          updatedBy: req.body.updatedBy,
+          approvedBy: req.body.approvedBy,
+          registrationStatus: "Approved",
+        }
+      );
+      return res
         .status(StatusCodes.OK)
         .json({ message: "user status updated successfully" });
-    } else {
-      res.status(StatusCodes.NOT_FOUND).json({ message: "user not found" });
     }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });

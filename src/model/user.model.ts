@@ -44,6 +44,8 @@ const userSchema = new mongoose.Schema(
     activeStatus: Boolean,
     createdBy: String,
     updatedBy: String,
+    registrationStatus: String,
+    approvedBy: String,
   },
   {
     timestamps: true,
