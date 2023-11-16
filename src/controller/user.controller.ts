@@ -115,9 +115,9 @@ const forgetPassword = async (req: Request, res: Response) => {
     const reqData: any = Object.assign({}, req.body);
     const validUser = await user.findOne({
       $or: [
-        { username: reqData.username },
-        { email: reqData.email },
-        { mobile: reqData.mobile },
+        { username: reqData.userId },
+        { email: reqData.userId },
+        { mobile: reqData.userId },
       ],
     });
     if (validUser) {
