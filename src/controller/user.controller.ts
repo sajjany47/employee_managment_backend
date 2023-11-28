@@ -37,7 +37,7 @@ const generateActivationKey = async (req: Request, res: Response) => {
         activationCode: activationKey,
         createdBy: reqData.createdBy,
         activeStatus: false,
-        registrationStatus: "Pending For User Approved",
+        registrationStatus: "pending",
       });
       const saveUser = await userData.save();
       res.status(StatusCodes.OK).json({
@@ -45,6 +45,24 @@ const generateActivationKey = async (req: Request, res: Response) => {
         activationKey: saveUser.activationCode,
       });
     }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+const activationKeyList = async (req: Request, res: Response) => {
+  try {
+    const status: any = req.params;
+    var activationList: Array<[]> = [];
+    if (status === "all") {
+      activationList = await user.find();
+    } else {
+      activationList = await user.find({ registrationStatus: status });
+    }
+
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: activationList });
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
@@ -98,7 +116,7 @@ const userUpdate = async (req: Request, res: Response) => {
           workDetail: reqData.workDetail,
           document: reqData.document,
           bankDetails: reqData.bankDetails,
-          registrationStatus: "Pending For Admin Approved",
+          registrationStatus: "verification",
         }
       );
       return res
@@ -191,7 +209,7 @@ const activeStatus = async (req: Request, res: Response) => {
           activeStatus: req.body.activeStatus,
           updatedBy: req.body.updatedBy,
           approvedBy: req.body.approvedBy,
-          registrationStatus: "Approved",
+          registrationStatus: "approved",
         }
       );
       return res
@@ -210,4 +228,5 @@ export {
   checkActivationKey,
   login,
   activeStatus,
+  activationKeyList,
 };
