@@ -54,10 +54,10 @@ const activationKeyList = async (req: Request, res: Response) => {
   try {
     const status: any = req.params;
     var activationList: Array<[]> = [];
-    if (status === "all") {
+    if (status.id === "all") {
       activationList = await user.find();
     } else {
-      activationList = await user.find({ registrationStatus: status });
+      activationList = await user.find({ registrationStatus: status.id });
     }
 
     res
