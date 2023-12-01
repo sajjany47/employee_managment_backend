@@ -53,7 +53,7 @@ const generateActivationKey = async (req: Request, res: Response) => {
 const activationKeyList = async (req: Request, res: Response) => {
   try {
     const status: any = req.params;
-    var activationList: Array<[]> = [];
+    var activationList: any = [];
     if (status.id === "all") {
       activationList = await user.find();
     } else {
