@@ -55,9 +55,11 @@ const activationKeyList = async (req: Request, res: Response) => {
     const status: any = req.params;
     var activationList: any = [];
     if (status.id === "all") {
-      activationList = await user.find();
+      activationList = await user.find().sort({ createdAt: -1 });
     } else {
-      activationList = await user.find({ registrationStatus: status.id });
+      activationList = await user
+        .find({ registrationStatus: status.id })
+        .sort({ createdAt: -1 });
     }
 
     res
