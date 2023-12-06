@@ -2,11 +2,10 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    role: String,
     activationCode: String,
     name: String,
     username: String,
-    password: String,
+    role: String,
     mobile: String,
     email: String,
     dob: Date,
@@ -15,6 +14,7 @@ const userSchema = new mongoose.Schema(
     district: String,
     city: String,
     pincode: String,
+    password: String,
     education: [
       {
         boardName: String,
