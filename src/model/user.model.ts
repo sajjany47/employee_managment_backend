@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema(
     education: [
       {
         boardName: String,
-        passingYear: Number,
+        passingYear: String,
         marksPercentage: String,
       },
     ],
@@ -26,18 +26,19 @@ const userSchema = new mongoose.Schema(
       {
         companyName: String,
         companyAddress: String,
-        startingYear: Number,
-        endingYear: Number,
+        startingYear: String,
+        endingYear: String,
       },
     ],
     document: {
-      aadharNumber: Number,
+      aadharNumber: String,
       voterNumber: String,
       panNumber: String,
+      passportNumber: String,
     },
     bankDetails: {
       bankName: String,
-      accountNumber: Number,
+      accountNumber: String,
       ifsc: String,
       branchName: String,
     },
