@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
     workDetail: [
       {
         companyName: String,
-        companyAddress: String,
+        position: String,
         startingYear: String,
         endingYear: String,
       },
