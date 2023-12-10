@@ -138,27 +138,37 @@ const userUpdate = async (req: Request, res: Response) => {
         .json({ message: "invalid activation code" });
     }
     if (validUser) {
-      const password = await bcrypt.hash(reqData.password, 10);
+      const findDuplicateUser = await user.findOne({
+        $or: [{ email: reqData.email }, { mobile: reqData.mobile }],
+      });
 
-      await validUser.updateOne(
-        { activationCode: reqData.activationCode },
-        {
-          password: password,
-          address: reqData.address,
-          state: reqData.state,
-          district: reqData.district,
-          city: reqData.city,
-          pincode: reqData.pincode,
-          education: reqData.education,
-          workDetail: reqData.workDetail,
-          document: reqData.document,
-          bankDetails: reqData.bankDetails,
-          registrationStatus: "verification",
-        }
-      );
-      return res
-        .status(StatusCodes.OK)
-        .json({ message: "user update successfully" });
+      if (findDuplicateUser) {
+        const password = await bcrypt.hash(reqData.password, 10);
+
+        await validUser.updateOne(
+          { activationCode: reqData.activationCode },
+          {
+            password: password,
+            address: reqData.address,
+            state: reqData.state,
+            district: reqData.district,
+            city: reqData.city,
+            pincode: reqData.pincode,
+            education: reqData.education,
+            workDetail: reqData.workDetail,
+            document: reqData.document,
+            bankDetails: reqData.bankDetails,
+            registrationStatus: "verification",
+          }
+        );
+        return res
+          .status(StatusCodes.OK)
+          .json({ message: "user update successfully" });
+      } else {
+        res
+          .status(StatusCodes.NOT_ACCEPTABLE)
+          .json({ message: "user already register" });
+      }
     }
   } catch (error: any) {
     return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
