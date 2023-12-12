@@ -34,13 +34,13 @@ const generateActivationKey = async (req: Request, res: Response) => {
         mobile: reqData.mobile,
         dob: reqData.dob,
         role: reqData.role,
+        password: await bcrypt.hash(reqData.password, 10),
         activationCode: activationKey,
         address: null,
         state: null,
         district: null,
         city: null,
         pincode: null,
-        password: null,
         education: [
           {
             boardName: null,
@@ -71,7 +71,7 @@ const generateActivationKey = async (req: Request, res: Response) => {
         createdBy: reqData.createdBy,
         updatedBy: null,
         approvedBy: reqData.approvedBy,
-        activeStatus: false,
+        activeStatus: true,
         registrationStatus: "pending",
       });
       const saveUser = await userData.save();
@@ -138,37 +138,27 @@ const userUpdate = async (req: Request, res: Response) => {
         .json({ message: "invalid activation code" });
     }
     if (validUser) {
-      const findDuplicateUser = await user.findOne({
-        $or: [{ email: reqData.email }, { mobile: reqData.mobile }],
-      });
-
-      if (findDuplicateUser) {
-        const password = await bcrypt.hash(reqData.password, 10);
-
-        await validUser.updateOne(
-          { activationCode: reqData.activationCode },
-          {
-            password: password,
-            address: reqData.address,
-            state: reqData.state,
-            district: reqData.district,
-            city: reqData.city,
-            pincode: reqData.pincode,
-            education: reqData.education,
-            workDetail: reqData.workDetail,
-            document: reqData.document,
-            bankDetails: reqData.bankDetails,
-            registrationStatus: "verification",
-          }
-        );
-        return res
-          .status(StatusCodes.OK)
-          .json({ message: "user update successfully" });
-      } else {
-        res
-          .status(StatusCodes.NOT_ACCEPTABLE)
-          .json({ message: "user already register" });
-      }
+      await validUser.updateOne(
+        { activationCode: reqData.activationCode },
+        {
+          address: reqData.address,
+          state: reqData.state,
+          district: reqData.district,
+          city: reqData.city,
+          pincode: reqData.pincode,
+          education: reqData.education,
+          workDetail: reqData.workDetail,
+          document: reqData.document,
+          bankDetails: reqData.bankDetails,
+          registrationStatus: "verification",
+          updatedBy: reqData.updateBy,
+          approvedBy: null,
+          activeStatus: true,
+        }
+      );
+      return res
+        .status(StatusCodes.OK)
+        .json({ message: "user update successfully" });
     }
   } catch (error: any) {
     return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
