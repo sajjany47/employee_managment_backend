@@ -138,22 +138,24 @@ const userUpdate = async (req: Request, res: Response) => {
         .json({ message: "invalid activation code" });
     }
     if (validUser) {
-      await validUser.updateOne(
+      await user.updateOne(
         { activationCode: reqData.activationCode },
         {
-          address: reqData.address,
-          state: reqData.state,
-          district: reqData.district,
-          city: reqData.city,
-          pincode: reqData.pincode,
-          education: reqData.education,
-          workDetail: reqData.workDetail,
-          document: reqData.document,
-          bankDetails: reqData.bankDetails,
-          registrationStatus: "verification",
-          updatedBy: reqData.updateBy,
-          approvedBy: null,
-          activeStatus: true,
+          $set: {
+            address: reqData.address,
+            state: reqData.state,
+            district: reqData.district,
+            city: reqData.city,
+            pincode: reqData.pincode,
+            education: reqData.education,
+            workDetail: reqData.workDetail,
+            document: reqData.document,
+            bankDetails: reqData.bankDetails,
+            registrationStatus: "verification",
+            updatedBy: reqData.updatedBy,
+            approvedBy: null,
+            activeStatus: true,
+          },
         }
       );
       return res
