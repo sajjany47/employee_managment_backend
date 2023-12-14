@@ -4,6 +4,7 @@ import user from "../model/user.model";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
+import { Aggregate } from "mongoose";
 
 const generateActivationKey = async (req: Request, res: Response) => {
   try {
@@ -209,6 +210,12 @@ const login = async (req: Request, res: Response) => {
           checkUser.password
         );
         if (verifyPassword) {
+          const userData = await user.aggregate([
+            { $match: { _id: checkUser._id } },
+            { $project: { password: 0 } },
+          ]);
+
+          console.log(userData);
           const scretKey: any = process.env.secret_Key;
           const token = jwt.sign({ _id: checkUser._id }, scretKey, {
             expiresIn: "6h",
@@ -255,6 +262,13 @@ const activeStatus = async (req: Request, res: Response) => {
         .status(StatusCodes.OK)
         .json({ message: "user status updated successfully" });
     }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+const userDatatTable = async (req: Request, res: Response) => {
+  try {
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
