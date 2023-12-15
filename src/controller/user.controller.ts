@@ -215,14 +215,13 @@ const login = async (req: Request, res: Response) => {
             { $project: { password: 0 } },
           ]);
 
-          console.log(userData);
           const scretKey: any = process.env.secret_Key;
           const token = jwt.sign({ _id: checkUser._id }, scretKey, {
             expiresIn: "6h",
           });
           // const userData: any = checkUser.project({ password: 0 });
           // console.log(userData);
-          res.status(StatusCodes.OK).json({ user: checkUser, token: token });
+          res.status(StatusCodes.OK).json({ user: userData[0], token: token });
         } else {
           res
             .status(StatusCodes.UNAUTHORIZED)
@@ -269,6 +268,23 @@ const activeStatus = async (req: Request, res: Response) => {
 
 const userDatatTable = async (req: Request, res: Response) => {
   try {
+    const reqData = req.body;
+    const page = reqData.page;
+    const limit = reqData.limit;
+    const start = page * limit - limit;
+    const search = {
+      name: { $regex: `^${reqData.search.name}`, $options: "i" },
+      username: { $regex: `^${reqData.search.username}`, $options: "i" },
+      mobile: { $regex: `^${reqData.search.mobile}`, $options: "i" },
+    };
+    const searchDataTable = await user.aggregate([
+      { $match: reqData?.search ? search : {} },
+      { $skip: start },
+      { $limit: limit },
+    ]);
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: searchDataTable });
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
@@ -282,4 +298,5 @@ export {
   login,
   activeStatus,
   activationKeyList,
+  userDatatTable,
 };

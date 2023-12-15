@@ -6,6 +6,7 @@ import {
   forgetPassword,
   generateActivationKey,
   login,
+  userDatatTable,
   userUpdate,
 } from "../controller/user.controller";
 import { auth } from "../middleware/auth.middleware";
@@ -22,5 +23,6 @@ routes.route("/change-status").post(auth, activeStatus);
 routes.route("/activation-key-list/:id").get(auth, activationKeyList);
 routes.route("/employee-list").post(auth, employeeList);
 routes.route("/time-record").post(auth, timeData);
+routes.route("/user-datatable").post(auth, userDatatTable);
 
 export default routes;
