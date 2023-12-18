@@ -253,8 +253,8 @@ const activeStatus = async (req: Request, res: Response) => {
         {
           activeStatus: req.body.activeStatus,
           updatedBy: req.body.updatedBy,
-          approvedBy: req.body.approvedBy,
-          registrationStatus: "approved",
+          // approvedBy: req.body.approvedBy,
+          // registrationStatus: "approved",
         }
       );
       return res
