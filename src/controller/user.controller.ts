@@ -139,7 +139,7 @@ const userUpdate = async (req: Request, res: Response) => {
         .json({ message: "invalid activation code" });
     }
     if (validUser) {
-      let requestData = {
+      let requestData: any = {
         name: reqData.name,
         address: reqData.address,
         state: reqData.state,
@@ -165,7 +165,7 @@ const userUpdate = async (req: Request, res: Response) => {
             .status(StatusCodes.CONFLICT)
             .json({ message: "Username already exists" });
         } else {
-          return { ...requestData, username: reqData.username };
+          requestData = { ...requestData, username: reqData.username };
         }
       }
 
@@ -178,7 +178,7 @@ const userUpdate = async (req: Request, res: Response) => {
             .status(StatusCodes.CONFLICT)
             .json({ message: "Email already exists" });
         } else {
-          return { ...requestData, email: reqData.email };
+          requestData = { ...requestData, email: reqData.email };
         }
       }
 
@@ -191,7 +191,7 @@ const userUpdate = async (req: Request, res: Response) => {
             .status(StatusCodes.CONFLICT)
             .json({ message: "Mobile Number already exists" });
         } else {
-          return { ...requestData, mobile: reqData.mobile };
+          requestData = { ...requestData, mobile: reqData.mobile };
         }
       }
       await user.updateOne(
