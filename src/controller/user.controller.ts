@@ -139,24 +139,80 @@ const userUpdate = async (req: Request, res: Response) => {
         .json({ message: "invalid activation code" });
     }
     if (validUser) {
+      let requestData = {
+        name: reqData.name,
+        address: reqData.address,
+        state: reqData.state,
+        district: reqData.district,
+        city: reqData.city,
+        pincode: reqData.pincode,
+        education: reqData.education,
+        workDetail: reqData.workDetail,
+        document: reqData.document,
+        bankDetails: reqData.bankDetails,
+        registrationStatus: "verification",
+        updatedBy: reqData.updatedBy,
+        approvedBy: null,
+        activeStatus: true,
+      };
+
+      if (reqData.username) {
+        const findDuplicateName: any = await user.findOne({
+          username: reqData.username,
+        });
+        if (findDuplicateName) {
+          return res
+            .status(StatusCodes.CONFLICT)
+            .json({ message: "Username already exists" });
+        } else {
+          return { ...requestData, username: reqData.username };
+        }
+      }
+
+      if (reqData.email) {
+        const findDuplicateEmail: any = await user.findOne({
+          email: reqData.email,
+        });
+        if (findDuplicateEmail) {
+          return res
+            .status(StatusCodes.CONFLICT)
+            .json({ message: "Email already exists" });
+        } else {
+          return { ...requestData, email: reqData.email };
+        }
+      }
+
+      if (reqData.mobile) {
+        const findDuplicateMobile: any = await user.findOne({
+          mobile: reqData.mobile,
+        });
+        if (findDuplicateMobile) {
+          return res
+            .status(StatusCodes.CONFLICT)
+            .json({ message: "Mobile Number already exists" });
+        } else {
+          return { ...requestData, mobile: reqData.mobile };
+        }
+      }
       await user.updateOne(
         { activationCode: reqData.activationCode },
         {
-          $set: {
-            address: reqData.address,
-            state: reqData.state,
-            district: reqData.district,
-            city: reqData.city,
-            pincode: reqData.pincode,
-            education: reqData.education,
-            workDetail: reqData.workDetail,
-            document: reqData.document,
-            bankDetails: reqData.bankDetails,
-            registrationStatus: "verification",
-            updatedBy: reqData.updatedBy,
-            approvedBy: null,
-            activeStatus: true,
-          },
+          $set: requestData,
+          //  {
+          //   address: reqData.address,
+          //   state: reqData.state,
+          //   district: reqData.district,
+          //   city: reqData.city,
+          //   pincode: reqData.pincode,
+          //   education: reqData.education,
+          //   workDetail: reqData.workDetail,
+          //   document: reqData.document,
+          //   bankDetails: reqData.bankDetails,
+          //   registrationStatus: "verification",
+          //   updatedBy: reqData.updatedBy,
+          //   approvedBy: null,
+          //   activeStatus: true,
+          // },
         }
       );
       return res
