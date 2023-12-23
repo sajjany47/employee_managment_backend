@@ -37,26 +37,15 @@ const generateActivationKey = async (req: Request, res: Response) => {
         role: reqData.role,
         password: await bcrypt.hash(reqData.password, 10),
         activationCode: activationKey,
+        position: null,
+        skill: null,
         address: null,
         state: null,
         district: null,
         city: null,
         pincode: null,
-        education: [
-          {
-            boardName: null,
-            passingYear: null,
-            marksPercentage: null,
-          },
-        ],
-        workDetail: [
-          {
-            companyName: null,
-            position: null,
-            startingYear: null,
-            endingYear: null,
-          },
-        ],
+        education: null,
+        workDetail: null,
         document: {
           aadharNumber: null,
           voterNumber: null,
@@ -141,6 +130,8 @@ const userUpdate = async (req: Request, res: Response) => {
     if (validUser) {
       let requestData: any = {
         name: reqData.name,
+        position: reqData.position,
+        skill: reqData.skill,
         address: reqData.address,
         state: reqData.state,
         district: reqData.district,
@@ -150,7 +141,7 @@ const userUpdate = async (req: Request, res: Response) => {
         workDetail: reqData.workDetail,
         document: reqData.document,
         bankDetails: reqData.bankDetails,
-        registrationStatus: "verification",
+        registrationStatus: "verification pending",
         updatedBy: reqData.updatedBy,
         approvedBy: null,
         activeStatus: true,
@@ -198,21 +189,6 @@ const userUpdate = async (req: Request, res: Response) => {
         { activationCode: reqData.activationCode },
         {
           $set: requestData,
-          //  {
-          //   address: reqData.address,
-          //   state: reqData.state,
-          //   district: reqData.district,
-          //   city: reqData.city,
-          //   pincode: reqData.pincode,
-          //   education: reqData.education,
-          //   workDetail: reqData.workDetail,
-          //   document: reqData.document,
-          //   bankDetails: reqData.bankDetails,
-          //   registrationStatus: "verification",
-          //   updatedBy: reqData.updatedBy,
-          //   approvedBy: null,
-          //   activeStatus: true,
-          // },
         }
       );
       return res
@@ -346,6 +322,27 @@ const userDatatTable = async (req: Request, res: Response) => {
   }
 };
 
+const userVerified = async (req: Request, res: Response) => {
+  try {
+    const validUser: any = await user.findOne({
+      activationCode: req.body.activationCode,
+    });
+    if (validUser) {
+      await user.updateOne(
+        { activationCode: req.body.activationCode },
+        {
+          approvedBy: req.body.approvedBy,
+          registrationStatus: req.body.registrationStatus,
+        }
+      );
+    } else {
+      res.status(StatusCodes.NOT_FOUND).json({ message: "user not found" });
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 export {
   generateActivationKey,
   forgetPassword,
@@ -355,4 +352,5 @@ export {
   activeStatus,
   activationKeyList,
   userDatatTable,
+  userVerified,
 };
