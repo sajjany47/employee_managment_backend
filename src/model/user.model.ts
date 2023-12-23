@@ -15,33 +15,39 @@ const userSchema = new mongoose.Schema(
     city: String,
     pincode: String,
     password: String,
-    education: [
-      {
-        boardName: String,
-        passingYear: String,
-        marksPercentage: String,
-      },
-    ],
-    workDetail: [
-      {
-        companyName: String,
-        position: String,
-        startingYear: String,
-        endingYear: String,
-      },
-    ],
-    document: {
-      aadharNumber: String,
-      voterNumber: String,
-      panNumber: String,
-      passportNumber: String,
-    },
-    bankDetails: {
-      bankName: String,
-      accountNumber: String,
-      ifsc: String,
-      branchName: String,
-    },
+    position: String,
+    skill: Array,
+    education: Array,
+    workDetail: Array,
+    document: Object,
+    bankDetails: Object,
+    // education: [
+    //   {
+    //     boardName: String,
+    //     passingYear: String,
+    //     marksPercentage: String,
+    //   },
+    // ],
+    // workDetail: [
+    //   {
+    //     companyName: String,
+    //     position: String,
+    //     startingYear: String,
+    //     endingYear: String,
+    //   },
+    // ],
+    // document: {
+    //   aadharNumber: String,
+    //   voterNumber: String,
+    //   panNumber: String,
+    //   passportNumber: String,
+    // },
+    // bankDetails: {
+    //   bankName: String,
+    //   accountNumber: String,
+    //   ifsc: String,
+    //   branchName: String,
+    // },
     activeStatus: Boolean,
     createdBy: String,
     updatedBy: String,

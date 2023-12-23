@@ -46,23 +46,25 @@ const generateActivationKey = async (req: Request, res: Response) => {
         pincode: null,
         education: null,
         workDetail: null,
-        document: {
-          aadharNumber: null,
-          voterNumber: null,
-          panNumber: null,
-          passportNumber: null,
-        },
-        bankDetails: {
-          bankName: null,
-          accountNumber: null,
-          ifsc: null,
-          branchName: null,
-        },
+        document: null,
+        bankDetails: null,
+        // document: {
+        //   aadharNumber: null,
+        //   voterNumber: null,
+        //   panNumber: null,
+        //   passportNumber: null,
+        // },
+        // bankDetails: {
+        //   bankName: null,
+        //   accountNumber: null,
+        //   ifsc: null,
+        //   branchName: null,
+        // },
         createdBy: reqData.createdBy,
         updatedBy: null,
         approvedBy: reqData.approvedBy,
         activeStatus: true,
-        registrationStatus: "pending",
+        registrationStatus: "waiting",
       });
       const saveUser = await userData.save();
       res.status(StatusCodes.OK).json({
@@ -141,7 +143,7 @@ const userUpdate = async (req: Request, res: Response) => {
         workDetail: reqData.workDetail,
         document: reqData.document,
         bankDetails: reqData.bankDetails,
-        registrationStatus: "verification pending",
+        registrationStatus: "pending",
         updatedBy: reqData.updatedBy,
         approvedBy: null,
         activeStatus: true,
