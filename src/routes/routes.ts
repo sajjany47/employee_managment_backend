@@ -25,7 +25,7 @@ routes.route("/single-user/:id").get(auth, singleUser);
 routes.route("/forget-password").post(forgetPassword);
 routes.route("/change-status").post(auth, activeStatus);
 routes.route("/activation-key-list/:id").get(auth, activationKeyList);
-routes.route("/employee-list").post(auth, employeeList);
+routes.route("/employee-list").get(auth, employeeList);
 routes.route("/time-record").post(auth, timeData);
 routes.route("/user-datatable").post(auth, userDatatTable);
 
