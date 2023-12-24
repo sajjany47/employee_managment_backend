@@ -6,6 +6,7 @@ import {
   forgetPassword,
   generateActivationKey,
   login,
+  singleUser,
   userDatatTable,
   userUpdate,
   userVerified,
@@ -20,6 +21,7 @@ routes.route("/activation-code").post(auth, generateActivationKey);
 routes.route("/check-activation-key").post(checkActivationKey);
 routes.route("/user-update").post(auth, userUpdate);
 routes.route("/user-verified").post(auth, userVerified);
+routes.route("/single-user/:id").get(auth, singleUser);
 routes.route("/forget-password").post(forgetPassword);
 routes.route("/change-status").post(auth, activeStatus);
 routes.route("/activation-key-list/:id").get(auth, activationKeyList);

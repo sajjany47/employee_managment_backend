@@ -4,7 +4,7 @@ import user from "../model/user.model";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
-import { Aggregate } from "mongoose";
+import { isValidObjectId } from "mongoose";
 
 const generateActivationKey = async (req: Request, res: Response) => {
   try {
@@ -44,22 +44,34 @@ const generateActivationKey = async (req: Request, res: Response) => {
         district: null,
         city: null,
         pincode: null,
-        education: null,
-        workDetail: null,
-        document: null,
-        bankDetails: null,
-        // document: {
-        //   aadharNumber: null,
-        //   voterNumber: null,
-        //   panNumber: null,
-        //   passportNumber: null,
-        // },
-        // bankDetails: {
-        //   bankName: null,
-        //   accountNumber: null,
-        //   ifsc: null,
-        //   branchName: null,
-        // },
+        education: [
+          {
+            boardName: null,
+            passingYear: null,
+            marksPercentage: null,
+          },
+        ],
+        workDetail: [
+          {
+            companyName: null,
+            position: null,
+            startingYear: null,
+            endingYear: null,
+          },
+        ],
+
+        document: {
+          aadharNumber: null,
+          voterNumber: null,
+          panNumber: null,
+          passportNumber: null,
+        },
+        bankDetails: {
+          bankName: null,
+          accountNumber: null,
+          ifsc: null,
+          branchName: null,
+        },
         createdBy: reqData.createdBy,
         updatedBy: null,
         approvedBy: reqData.approvedBy,
@@ -293,7 +305,7 @@ const activeStatus = async (req: Request, res: Response) => {
       );
       return res
         .status(StatusCodes.OK)
-        .json({ message: "user status updated successfully" });
+        .json({ message: "User status updated successfully" });
     }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
@@ -337,9 +349,24 @@ const userVerified = async (req: Request, res: Response) => {
           registrationStatus: req.body.registrationStatus,
         }
       );
+      return res
+        .status(StatusCodes.OK)
+        .json({ message: "User Approved successfully" });
     } else {
       res.status(StatusCodes.NOT_FOUND).json({ message: "user not found" });
     }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+const singleUser = async (req: Request, res: Response) => {
+  try {
+    const id = req.params;
+    const findUser: any = await user.findOne({ _id: id.id }, { password: 0 });
+    return res
+      .status(StatusCodes.OK)
+      .json({ data: findUser, message: "Data fetched successfully" });
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
@@ -355,4 +382,5 @@ export {
   activationKeyList,
   userDatatTable,
   userVerified,
+  singleUser,
 };
