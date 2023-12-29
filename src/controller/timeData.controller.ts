@@ -72,4 +72,41 @@ const timeData = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export { timeData };
+const leaveApply = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const reqData = req.body;
+    const findUser: any = await user.findOne({ _id: reqData._id });
+    if (findUser) {
+      const endDay = moment(reqData.endDay);
+      const startDay = moment(reqData.startDay);
+      const totalDays: any = moment.duration(endDay.diff(startDay)).as("days");
+      const addLeave: any = {
+        user_id: reqData._id,
+        totalLeaveLeft: 8,
+        totalLeave: 3,
+        leaveDetails: [
+          {
+            startDay: moment(reqData.startDay).format("DD MMM, YYYY"),
+            endDay: moment(reqData.endDay).format("DD MMM, YYYY"),
+            totalDays: totalDays,
+            leaveStatus: "pending",
+            approvedBy: null,
+          },
+        ],
+        // user_id: reqData._id,
+        // startDay: moment(reqData.startDay).format("DD MMM, YYYY"),
+        // endDay: moment(reqData.endDay).format("DD MMM, YYYY"),
+        // totalDays: totalDays,
+        // reason: reqData.reason,
+        // leaveStatus: "pending",
+        // approvedBy: null,
+      };
+    } else {
+      res.status(StatusCodes.NOT_FOUND).json({ message: "User not found!" });
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+export { timeData, leaveApply };
