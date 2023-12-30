@@ -4,7 +4,6 @@ import user from "../model/user.model";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
-import { isValidObjectId } from "mongoose";
 
 const generateActivationKey = async (req: Request, res: Response) => {
   try {

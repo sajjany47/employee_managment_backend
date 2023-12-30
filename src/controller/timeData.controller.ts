@@ -93,13 +93,6 @@ const leaveApply = async (req: Request, res: Response, next: NextFunction) => {
             approvedBy: null,
           },
         ],
-        // user_id: reqData._id,
-        // startDay: moment(reqData.startDay).format("DD MMM, YYYY"),
-        // endDay: moment(reqData.endDay).format("DD MMM, YYYY"),
-        // totalDays: totalDays,
-        // reason: reqData.reason,
-        // leaveStatus: "pending",
-        // approvedBy: null,
       };
     } else {
       res.status(StatusCodes.NOT_FOUND).json({ message: "User not found!" });
