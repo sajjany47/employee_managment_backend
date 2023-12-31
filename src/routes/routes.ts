@@ -14,6 +14,7 @@ import {
 import { auth } from "../middleware/auth.middleware";
 import { timeData } from "../controller/timeData.controller";
 import { employeeList } from "../controller/employee.controller";
+import { holidayListData } from "../controller/holiday.controller";
 
 const routes = express.Router();
 routes.route("/sigin").post(login);
@@ -27,6 +28,7 @@ routes.route("/change-status").post(auth, activeStatus);
 routes.route("/activation-key-list/:id").get(auth, activationKeyList);
 routes.route("/employee-list").get(auth, employeeList);
 routes.route("/time-record").post(auth, timeData);
+routes.route("/holiday-list").post(holidayListData);
 routes.route("/user-datatable").post(auth, userDatatTable);
 
 export default routes;
