@@ -3,6 +3,8 @@ import user from "../model/user.model";
 import { StatusCodes } from "http-status-codes";
 import timeRecord from "../model/timeData.model";
 import moment from "moment";
+import leave from "../model/leave.model";
+import mongoose from "mongoose";
 
 const timeData = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -74,8 +76,8 @@ const timeData = async (req: Request, res: Response, next: NextFunction) => {
 
 const leaveApply = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const reqData = req.body;
-    const findUser: any = await user.findOne({ _id: reqData._id });
+    const reqData: any = Object.assign({}, req.body);
+    const findUser: any = await user.findOne({ _id: reqData.user_id });
     if (findUser) {
       const endDay = moment(reqData.endDay);
       const startDay = moment(reqData.startDay);
@@ -83,7 +85,7 @@ const leaveApply = async (req: Request, res: Response, next: NextFunction) => {
       const addLeave: any = {
         user_id: reqData._id,
         totalLeaveLeft: 8,
-        totalLeave: 3,
+        totalLeave: 24,
         leaveDetails: [
           {
             startDay: moment(reqData.startDay).format("DD MMM, YYYY"),
@@ -102,4 +104,60 @@ const leaveApply = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export { timeData, leaveApply };
+const singleUserLeaveAdd = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const reqData: any = Object.assign({}, req.body);
+    const findUser = await user.findOne({ _id: reqData.user_id });
+
+    if (findUser) {
+      const saveData: any = new leave({
+        user_id: reqData.user_id,
+        totalLeave: reqData.totalLeave,
+        updatedBy: reqData.updatedBy,
+      });
+
+      await saveData.save();
+      res.status(StatusCodes.OK).json({ message: "Successfully leave added" });
+    } else {
+      res.status(StatusCodes.NOT_FOUND).json({ message: "User not found!" });
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+const multiUserLeaveAdd = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const reqData: any = Object.assign({}, req.body);
+    const modiifyBulkUser: any = reqData.bulkUser.map(
+      (item: any) => new mongoose.Types.ObjectId(item.user_id)
+    );
+    const findUser = await user.aggregate([
+      {
+        $match: {
+          _id: {
+            $in: modiifyBulkUser,
+          },
+        },
+      },
+    ]);
+
+    if (findUser.length) {
+      leave.insertMany(reqData.bulkUser);
+      res.status(StatusCodes.OK).json({ message: "Successfully leave added" });
+    } else {
+      res.status(StatusCodes.NOT_FOUND).json({ message: "User not found!" });
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+export { timeData, leaveApply, singleUserLeaveAdd, multiUserLeaveAdd };
