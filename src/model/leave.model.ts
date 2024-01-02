@@ -6,7 +6,18 @@ const leaveSchema = new mongoose.Schema(
     totalLeaveLeft: String,
     totalLeave: String,
     leaveDetails: [
-      { startDay: Date, endDay: Date, totalDays: String, approvedBy: String },
+      {
+        startDay: Date,
+        endDay: Date,
+        totalDays: String,
+        leaveStatus: {
+          type: String,
+          trim: true,
+          lowercase: true,
+          enum: ["pending", "approved", "rejected"],
+        },
+        approvedBy: String,
+      },
     ],
     updatedBy: String,
   },

@@ -5,9 +5,9 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start:dev": "env-cmd -f .env.development nodemon ./src/index.ts",
-    "start:staging": "env-cmd -f .env.staging nodemon ./src/index.ts",
-    "start:prod": "env-cmd -f .env.prodution nodemon ./src/index.ts"
+    "start:dev": "env-cmd -f .env.development nodemon --exec node -r @swc-node/register src/index.ts",
+    "start:staging": "env-cmd -f .env.staging nodemon --exec node -r @swc-node/register src/index.ts",
+    "start:prod": "env-cmd -f .env.prodution nodemon --exec node -r @swc-node/register src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -35,7 +35,8 @@
     "@types/jsonwebtoken": "^9.0.4",
     "@types/node": "^20.8.5",
     "nodemon": "^3.0.1",
-    "ts-node": "^10.9.1",
+    "swc": "^1.0.11",
+    "swc-node": "^1.0.0",
     "typescript": "^5.2.2"
   }
 }
