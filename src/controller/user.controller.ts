@@ -249,7 +249,10 @@ const login = async (req: Request, res: Response) => {
     });
 
     if (checkUser) {
-      if (checkUser.activeStatus === true) {
+      if (
+        checkUser.activeStatus === true &&
+        checkUser.registrationStatus === "verified"
+      ) {
         const verifyPassword = await bcrypt.compare(
           reqData.password,
           checkUser.password
