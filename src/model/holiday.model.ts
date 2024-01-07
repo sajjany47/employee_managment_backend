@@ -2,10 +2,12 @@ import mongoose from "mongoose";
 
 const officeHoliday = new mongoose.Schema(
   {
+    holidayYear: String,
     holidayList: [
       {
         holidayDate: { type: Date },
         reason: { type: String, lowercase: true },
+        createdBy: String,
       },
     ],
     updatedBy: String,
