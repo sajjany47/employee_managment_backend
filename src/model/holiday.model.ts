@@ -10,7 +10,6 @@ const officeHoliday = new mongoose.Schema(
         createdBy: String,
       },
     ],
-    updatedBy: String,
   },
   { timestamps: true }
 );

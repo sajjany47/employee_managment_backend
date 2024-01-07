@@ -19,7 +19,12 @@ import {
   timeData,
 } from "../controller/timeData.controller";
 import { employeeList } from "../controller/employee.controller";
-import { holidayListData } from "../controller/holiday.controller";
+import {
+  createHolidayList,
+  deleteHolidayList,
+  holidayListData,
+  // holidayListData,
+} from "../controller/holiday.controller";
 
 const routes = express.Router();
 routes.route("/sigin").post(login);
@@ -32,8 +37,10 @@ routes.route("/forget-password").post(forgetPassword);
 routes.route("/change-status").post(auth, activeStatus);
 routes.route("/activation-key-list/:id").get(auth, activationKeyList);
 routes.route("/employee-list").get(auth, employeeList);
+routes.route("/holiday-list/:id").get(auth, holidayListData);
+routes.route("/create-holiday").post(createHolidayList);
+routes.route("/delete-holiday").post(deleteHolidayList);
 routes.route("/time-record").post(auth, timeData);
-routes.route("/create-holiday-list").post(auth, holidayListData);
 routes.route("/single-user/leave-add").post(auth, singleUserLeaveAdd);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 routes.route("/leave-apply").post(auth, leaveApply);
