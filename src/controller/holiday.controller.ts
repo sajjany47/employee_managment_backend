@@ -8,10 +8,25 @@ const holidayListData = async (req: Request, res: Response) => {
   try {
     const year: any = req.params;
 
-    const holidayListData: any = await holidayList.find({
-      holidayYear: year.id,
-    });
+    // const holidayListData: any = await holidayList
+    //   .findOne({
+    //     holidayYear: year.id,
+    //   })
 
+    const holidayListData: any = await holidayList.aggregate([
+      {
+        $match: {
+          holidayYear: year.id,
+        },
+      },
+
+      { $unwind: "$holidayList" },
+      {
+        $sort: {
+          "holidayList.holidayDate": 1,
+        },
+      },
+    ]);
     res.status(StatusCodes.OK).json({
       message: "Holiday List fetched successfully",
       data: holidayListData,
@@ -85,22 +100,22 @@ const createHolidayList = async (req: Request, res: Response) => {
 const deleteHolidayList = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
-    const deleteHoliday: any = await holidayList.deleteOne(
+    const deleteHoliday: any = await holidayList.findOne({
+      holidayYear: reqData.holidayYear,
+    });
+
+    const filterData = deleteHoliday.holidayList.filter(
+      (item: any) => item._id.toString() !== reqData._id
+    );
+    console.log(filterData);
+    const newUpdateData = await holidayList.updateOne(
       {
         holidayYear: reqData.holidayYear,
       },
-      { "holidayList._id": new mongoose.Types.ObjectId(reqData._id) }
+      { $set: { holidayList: filterData } }
     );
-    // const deleteHoliday = await holidayList.deleteOne({
-    //   $and: [
-    //     { holidayYear: reqData.holidayYear },
-    //     { "holidayList._id": new mongoose.Types.ObjectId(reqData._id) },
-    //   ],
-    // });
-
     res.status(StatusCodes.OK).json({
       message: "Holiday date deleted successfully",
-      data: deleteHoliday,
     });
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
