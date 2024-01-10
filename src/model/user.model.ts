@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       enum: ["admin", "employee", "hr"],
     },
+    isLeaveAllocated: Boolean,
     mobile: { type: String, trim: true },
     email: { type: String, trim: true, lowercase: true },
     dob: Date,

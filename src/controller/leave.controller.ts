@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import leave from "../model/leave.model";
 import moment from "moment";
+import user from "../model/user.model";
+import mongoose from "mongoose";
 
 const leaveAlloted = async (req: Request, res: Response) => {
   try {
@@ -50,6 +52,14 @@ const leaveAlloted = async (req: Request, res: Response) => {
       });
 
       const saveLeaveList = await createLeaveList.save();
+      if (saveLeaveList) {
+        const isLeaveAllocatedUpdate = await user.findOneAndUpdate(
+          {
+            _id: new mongoose.Types.ObjectId(reqData.user_id),
+          },
+          { $set: { isLeaveAllocated: true } }
+        );
+      }
 
       res
         .status(StatusCodes.OK)
@@ -60,4 +70,26 @@ const leaveAlloted = async (req: Request, res: Response) => {
   }
 };
 
-export { leaveAlloted };
+const getNewUserList = async (req: Request, res: Response) => {
+  try {
+    const userList = user
+      .find({ isLeaveAllocated: false, registrationStatus: "verified" })
+      .projection({ username: 1, _id: 1, name: 1 });
+
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: userList });
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+const editLeaveAlloctated = async (req: Request, res: Response) => {
+  try {
+    const reqData = Object.assign({}, req.body);
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+export { leaveAlloted, getNewUserList };

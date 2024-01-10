@@ -43,6 +43,7 @@ const generateActivationKey = async (req: Request, res: Response) => {
         district: null,
         city: null,
         pincode: null,
+        isLeaveAllocated: false,
         education: [
           {
             boardName: null,
