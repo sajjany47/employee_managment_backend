@@ -10,7 +10,7 @@ const leaveAlloted = async (req: Request, res: Response) => {
     const reqData = Object.assign({}, req.body);
     const findUser = await leave.findOne({ user_id: reqData.user_id });
     if (findUser) {
-      const findYear = findUser.leaveDetail.filter(
+      const findYear = findUser.leaveDetail.find(
         (item) => item.leaveYear === moment(reqData.leaveYear).format("YYYY")
       );
       if (findYear) {
@@ -87,6 +87,12 @@ const getNewUserList = async (req: Request, res: Response) => {
 const editLeaveAlloctated = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
+    const findUserLeave: any = await leave.findOne({ user_id: reqData._id });
+    const filterUser = findUserLeave.leaveDetail.find(
+      (item: any) => item.leaveYear === moment(reqData.leaveYear).format("YYYY")
+    );
+    if (filterUser) {
+    }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
