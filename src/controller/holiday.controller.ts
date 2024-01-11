@@ -105,15 +105,15 @@ const deleteHolidayList = async (req: Request, res: Response) => {
     });
 
     const filterData = deleteHoliday.holidayList.filter(
-      (item: any) => item._id.toString() !== reqData._id
+      (item: any) => item._id !== new mongoose.Types.ObjectId(reqData._id)
     );
-    console.log(filterData);
     const newUpdateData = await holidayList.updateOne(
       {
         holidayYear: reqData.holidayYear,
       },
       { $set: { holidayList: filterData } }
     );
+    console.log(new mongoose.Types.ObjectId(reqData._id));
     res.status(StatusCodes.OK).json({
       message: "Holiday date deleted successfully",
     });
