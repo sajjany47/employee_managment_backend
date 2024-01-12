@@ -100,20 +100,20 @@ const createHolidayList = async (req: Request, res: Response) => {
 const deleteHolidayList = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
-    const deleteHoliday: any = await holidayList.findOne({
-      holidayYear: reqData.holidayYear,
-    });
 
-    const filterData = deleteHoliday.holidayList.filter(
-      (item: any) => item._id !== new mongoose.Types.ObjectId(reqData._id)
-    );
-    const newUpdateData = await holidayList.updateOne(
+    const deleteHoliday: any = await holidayList.updateOne(
       {
         holidayYear: reqData.holidayYear,
       },
-      { $set: { holidayList: filterData } }
+      {
+        $pull: {
+          holidayList: {
+            _id: new mongoose.Types.ObjectId(reqData._id),
+          },
+        },
+      }
     );
-    console.log(new mongoose.Types.ObjectId(reqData._id));
+
     res.status(StatusCodes.OK).json({
       message: "Holiday date deleted successfully",
     });
