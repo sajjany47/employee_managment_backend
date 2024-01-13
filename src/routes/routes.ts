@@ -41,11 +41,11 @@ routes.route("/employee-list").get(auth, employeeList);
 routes.route("/holiday-list/:id").get(auth, holidayListData);
 routes.route("/create-holiday").post(auth, createHolidayList);
 routes.route("/delete-holiday").post(auth, deleteHolidayList);
-routes.route("/time-record").post(auth, timeData);
 routes.route("/single-user/leave-create").post(auth, leaveAlloted);
 routes.route("/userlist/leave").get(auth, getNewUserList);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 routes.route("/leave-apply").post(auth, leaveApply);
+routes.route("/time-record").post(auth, timeData);
 routes.route("/user-datatable").post(auth, userDatatTable);
 
 export default routes;

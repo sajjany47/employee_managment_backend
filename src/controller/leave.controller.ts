@@ -22,7 +22,7 @@ const leaveAlloted = async (req: Request, res: Response) => {
           leaveYear: moment(reqData.leaveYear).format("YYYY"),
           totalLeaveLeft: reqData.leaveAlloted,
           totalLeave: reqData.leaveAlloted,
-          leaveUseDetail: null,
+          leaveUseDetail: [],
         };
 
         const insertLeave = await leave.updateOne(
@@ -44,7 +44,7 @@ const leaveAlloted = async (req: Request, res: Response) => {
             leaveYear: moment(reqData.leaveYear).format("YYYY"),
             totalLeaveLeft: reqData.leaveAlloted,
             totalLeave: reqData.leaveAlloted,
-            leaveUseDetail: null,
+            leaveUseDetail: [],
           },
         ],
 
@@ -55,7 +55,7 @@ const leaveAlloted = async (req: Request, res: Response) => {
       if (saveLeaveList) {
         const isLeaveAllocatedUpdate = await user.findOneAndUpdate(
           {
-            _id: new mongoose.Types.ObjectId(reqData.user_id),
+            username: reqData.user_id,
           },
           { $set: { isLeaveAllocated: true } }
         );
@@ -72,9 +72,14 @@ const leaveAlloted = async (req: Request, res: Response) => {
 
 const getNewUserList = async (req: Request, res: Response) => {
   try {
-    const userList = user
-      .find({ isLeaveAllocated: false, registrationStatus: "verified" })
-      .projection({ username: 1, _id: 1, name: 1 });
+    const userList = await user.find(
+      {
+        isLeaveAllocated: false,
+        registrationStatus: "verified",
+      },
+      { username: 1, _id: 1, name: 1 }
+    );
+    // .projection({ username: 1, _id: 1, name: 1 });
 
     res
       .status(StatusCodes.OK)
