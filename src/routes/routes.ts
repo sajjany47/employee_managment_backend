@@ -25,7 +25,11 @@ import {
   holidayListData,
   // holidayListData,
 } from "../controller/holiday.controller";
-import { getNewUserList, leaveAlloted } from "../controller/leave.controller";
+import {
+  getNewUserList,
+  leaveAlloted,
+  leaveList,
+} from "../controller/leave.controller";
 
 const routes = express.Router();
 routes.route("/sigin").post(login);
@@ -43,6 +47,7 @@ routes.route("/create-holiday").post(auth, createHolidayList);
 routes.route("/delete-holiday").post(auth, deleteHolidayList);
 routes.route("/single-user/leave-create").post(auth, leaveAlloted);
 routes.route("/userlist/leave").get(auth, getNewUserList);
+routes.route("/leave-alloted-list/:id").get(auth, leaveList);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 routes.route("/leave-apply").post(auth, leaveApply);
 routes.route("/time-record").post(auth, timeData);

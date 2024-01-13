@@ -89,6 +89,30 @@ const getNewUserList = async (req: Request, res: Response) => {
   }
 };
 
+const leaveList = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const findLeaveList = await leave.aggregate([
+      {
+        $match: {
+          "leaveDetail.leaveYear": id,
+        },
+      },
+      {
+        $unwind: {
+          path: "$leaveDetail",
+        },
+      },
+    ]);
+
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: findLeaveList });
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 const editLeaveAlloctated = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
@@ -103,4 +127,4 @@ const editLeaveAlloctated = async (req: Request, res: Response) => {
   }
 };
 
-export { leaveAlloted, getNewUserList };
+export { leaveAlloted, getNewUserList, leaveList };
