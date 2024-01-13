@@ -23,6 +23,7 @@ const leaveAlloted = async (req: Request, res: Response) => {
           totalLeaveLeft: reqData.leaveAlloted,
           totalLeave: reqData.leaveAlloted,
           leaveUseDetail: [],
+          updatedBy: reqData.updatedBy,
         };
 
         const insertLeave = await leave.updateOne(
@@ -48,7 +49,7 @@ const leaveAlloted = async (req: Request, res: Response) => {
           },
         ],
 
-        updatedBy: reqData.updatedBy,
+        createdBy: reqData.createdBy,
       });
 
       const saveLeaveList = await createLeaveList.save();

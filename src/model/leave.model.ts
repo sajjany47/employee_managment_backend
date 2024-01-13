@@ -22,10 +22,11 @@ const leaveSchema = new mongoose.Schema(
             approvedBy: String,
           },
         ],
+        updatedBy: String,
       },
     ],
 
-    updatedBy: String,
+    createdBy: String,
   },
   { timestamps: true }
 );
