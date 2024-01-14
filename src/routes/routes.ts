@@ -26,6 +26,7 @@ import {
   // holidayListData,
 } from "../controller/holiday.controller";
 import {
+  editLeaveAlloctated,
   getNewUserList,
   leaveAlloted,
   leaveList,
@@ -46,8 +47,9 @@ routes.route("/holiday-list/:id").get(auth, holidayListData);
 routes.route("/create-holiday").post(auth, createHolidayList);
 routes.route("/delete-holiday").post(auth, deleteHolidayList);
 routes.route("/single-user/leave-create").post(auth, leaveAlloted);
-routes.route("/userlist/leave").get(auth, getNewUserList);
+routes.route("/userlist/leave/:id").get(getNewUserList);
 routes.route("/leave-alloted-list/:id").get(auth, leaveList);
+routes.route("/leave-alloted/edit").post(editLeaveAlloctated);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 routes.route("/leave-apply").post(auth, leaveApply);
 routes.route("/time-record").post(auth, timeData);

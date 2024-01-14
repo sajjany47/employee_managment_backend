@@ -23,7 +23,7 @@ const leaveAlloted = async (req: Request, res: Response) => {
           totalLeaveLeft: reqData.leaveAlloted,
           totalLeave: reqData.leaveAlloted,
           leaveUseDetail: [],
-          updatedBy: reqData.updatedBy,
+          updatedBy: reqData.createdBy,
         };
 
         const insertLeave = await leave.updateOne(
@@ -46,6 +46,7 @@ const leaveAlloted = async (req: Request, res: Response) => {
             totalLeaveLeft: reqData.leaveAlloted,
             totalLeave: reqData.leaveAlloted,
             leaveUseDetail: [],
+            updatedBy: reqData.createdBy,
           },
         ],
 
@@ -73,18 +74,30 @@ const leaveAlloted = async (req: Request, res: Response) => {
 
 const getNewUserList = async (req: Request, res: Response) => {
   try {
+    const id = req.params.id;
+
+    const presentYearUserList = await leave.find(
+      {
+        "leaveDetail.leaveYear": id,
+      }
+      // { user_id: 1, _id: 1 }
+    );
     const userList = await user.find(
       {
-        isLeaveAllocated: false,
+        // isLeaveAllocated: false,
         registrationStatus: "verified",
       },
       { username: 1, _id: 1, name: 1 }
     );
-    // .projection({ username: 1, _id: 1, name: 1 });
+
+    const filterData = userList.filter(
+      (item1) =>
+        !presentYearUserList.some((item2) => item1.username === item2.user_id)
+    );
 
     res
       .status(StatusCodes.OK)
-      .json({ message: "Data fetched successfully", data: userList });
+      .json({ message: "Data fetched successfully", data: filterData });
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
@@ -117,15 +130,35 @@ const leaveList = async (req: Request, res: Response) => {
 const editLeaveAlloctated = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
-    const findUserLeave: any = await leave.findOne({ user_id: reqData._id });
-    const filterUser = findUserLeave.leaveDetail.find(
-      (item: any) => item.leaveYear === moment(reqData.leaveYear).format("YYYY")
-    );
-    if (filterUser) {
+
+    const findYear = await leave.findOne({
+      "leaveDetail.leaveYear": reqData.leaveYear,
+    });
+    if (findYear) {
+      res
+        .status(StatusCodes.CONFLICT)
+        .json({ message: "Leave Year already added" });
+    } else {
+      const findUserLeave: any = await leave.findOneAndUpdate(
+        {
+          "leaveDetail._id": new mongoose.Types.ObjectId(reqData._id),
+        },
+        {
+          $set: {
+            "leaveDetail.$.leaveYear": reqData.leaveYear,
+            "leaveDetail.$.totalLeave": reqData.leaveAlloted,
+            "leaveDetail.$.updatedBy": reqData.updatedBy,
+          },
+        }
+      );
+
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "Leave updated successfully" });
     }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
 };
 
-export { leaveAlloted, getNewUserList, leaveList };
+export { leaveAlloted, getNewUserList, leaveList, editLeaveAlloctated };
