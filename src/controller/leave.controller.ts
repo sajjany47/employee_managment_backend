@@ -109,13 +109,13 @@ const leaveList = async (req: Request, res: Response) => {
     const id = req.params.id;
     const findLeaveList = await leave.aggregate([
       {
-        $match: {
-          "leaveDetail.leaveYear": id,
+        $unwind: {
+          path: "$leaveDetail",
         },
       },
       {
-        $unwind: {
-          path: "$leaveDetail",
+        $match: {
+          "leaveDetail.leaveYear": id,
         },
       },
     ]);
