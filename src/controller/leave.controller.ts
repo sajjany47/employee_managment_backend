@@ -86,6 +86,7 @@ const getNewUserList = async (req: Request, res: Response) => {
       {
         // isLeaveAllocated: false,
         registrationStatus: "verified",
+        activeStatus: true,
       },
       { username: 1, _id: 1, name: 1 }
     );
