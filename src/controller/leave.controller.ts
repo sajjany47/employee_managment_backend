@@ -132,16 +132,34 @@ const editLeaveAlloctated = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
 
+    let responseBody: any = {
+      "leaveDetail.$.updatedBy": reqData.updatedBy,
+      "leaveDetail.$.totalLeave": reqData.leaveAlloted,
+    };
+    if (reqData.leaveYear) {
+      const findUplicateYear = await leave.findOne({
+        user_id: reqData.user_id,
+        "leaveDetail.leaveYear": moment(reqData.leaveYear).format("YYYY"),
+      });
+      if (findUplicateYear) {
+        res.status(StatusCodes.MULTI_STATUS).json({
+          message: `${moment(reqData.leaveYear).format(
+            "YYYY"
+          )} Year Leave already allocated`,
+        });
+      } else {
+        responseBody = {
+          ...responseBody,
+          "leaveDetail.$.leaveYear": moment(reqData.leaveYear).format("YYYY"),
+        };
+      }
+    }
     const findUserLeave: any = await leave.findOneAndUpdate(
       {
         "leaveDetail._id": new mongoose.Types.ObjectId(reqData._id),
       },
       {
-        $set: {
-          "leaveDetail.$.leaveYear": reqData.leaveYear,
-          "leaveDetail.$.totalLeave": reqData.leaveAlloted,
-          "leaveDetail.$.updatedBy": reqData.updatedBy,
-        },
+        $set: responseBody,
       }
     );
 

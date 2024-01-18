@@ -49,7 +49,7 @@ routes.route("/delete-holiday").post(auth, deleteHolidayList);
 routes.route("/single-user/leave-create").post(auth, leaveAlloted);
 routes.route("/userlist/leave/:year").get(getNewUserList);
 routes.route("/leave-alloted-list/:id").get(auth, leaveList);
-routes.route("/leave-alloted/edit").post(editLeaveAlloctated);
+routes.route("/leave-alloted/edit").post(auth, editLeaveAlloctated);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 routes.route("/leave-apply").post(auth, leaveApply);
 routes.route("/time-record").post(auth, timeData);
