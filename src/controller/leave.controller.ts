@@ -142,7 +142,7 @@ const editLeaveAlloctated = async (req: Request, res: Response) => {
         "leaveDetail.leaveYear": moment(reqData.leaveYear).format("YYYY"),
       });
       if (findUplicateYear) {
-        res.status(StatusCodes.MULTI_STATUS).json({
+        return res.status(StatusCodes.CONFLICT).json({
           message: `${moment(reqData.leaveYear).format(
             "YYYY"
           )} Year Leave already allocated`,
