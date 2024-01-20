@@ -173,19 +173,34 @@ const editLeaveAlloctated = async (req: Request, res: Response) => {
 const leaveApply = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
-    const startDay = reqData.startDay;
-    const endDay = reqData.endDay;
-    let weekends = [];
+    const startDay = moment(reqData.startDay).format("YYYY-MM-DD");
+    const endDay = moment(reqData.endDay).format("YYYY-MM-DD");
+    // const startDayOfWeek = startDay.day();
+    // const endDayOfWeek = endDay.day();
 
-    for (
-      let date = startDay.clone();
-      date.isSameOrBefore(endDay);
-      date.add(1, "days")
-    ) {
-      if (date.weekday() !== 6 || date.weekday() !== 0) {
-        weekends.push(date);
+    const daysBetween = moment(endDay).diff(startDay, "days");
+
+    const weekends = [];
+
+    for (let i = 0; i < daysBetween; i++) {
+      const currentDayOfWeek = moment(startDay).add(i, "days").day();
+
+      if (currentDayOfWeek === 0 || currentDayOfWeek === 6) {
+        weekends.push(moment(startDay).add(i, "days").format("YYYY-MM-DD"));
       }
     }
+
+    // return weekends
+
+    // for (
+    //   let date = startDay.clone();
+    //   date.isSameOrBefore(endDay);
+    //   date.add(1, "days")
+    // ) {
+    //   if (date.weekday() !== 6 || date.weekday() !== 0) {
+    //     weekends.push(date);
+    //   }
+    // }
 
     if (weekends.length > 0) {
       // const findHoliday = await holidayList.findOne({
@@ -266,6 +281,7 @@ const leaveApply = async (req: Request, res: Response) => {
                 startDay: new Date(reqData.startDay),
                 endDay: new Date(reqData.endDay),
                 totalDays: filterDate.length,
+                reason: reqData.reason,
                 leaveStatus: "pending",
                 approvedBy: null,
               },
@@ -287,4 +303,10 @@ const leaveApply = async (req: Request, res: Response) => {
   }
 };
 
-export { leaveAlloted, getNewUserList, leaveList, editLeaveAlloctated };
+export {
+  leaveAlloted,
+  getNewUserList,
+  leaveList,
+  editLeaveAlloctated,
+  leaveApply,
+};
