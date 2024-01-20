@@ -4,7 +4,6 @@ import leave from "../model/leave.model";
 import moment from "moment";
 import user from "../model/user.model";
 import mongoose from "mongoose";
-import holidayList from "../model/holiday.model";
 
 const leaveAlloted = async (req: Request, res: Response) => {
   try {
@@ -55,14 +54,6 @@ const leaveAlloted = async (req: Request, res: Response) => {
       });
 
       const saveLeaveList = await createLeaveList.save();
-      // if (saveLeaveList) {
-      //   const isLeaveAllocatedUpdate = await user.findOneAndUpdate(
-      //     {
-      //       username: reqData.user_id,
-      //     },
-      //     { $set: { isLeaveAllocated: true } }
-      //   );
-      // }
 
       res
         .status(StatusCodes.OK)
@@ -77,15 +68,11 @@ const getNewUserList = async (req: Request, res: Response) => {
   try {
     const year = req.params.year;
 
-    const presentYearUserList = await leave.find(
-      {
-        "leaveDetail.leaveYear": year,
-      }
-      // { user_id: 1, _id: 1 }
-    );
+    const presentYearUserList = await leave.find({
+      "leaveDetail.leaveYear": year,
+    });
     const userList = await user.find(
       {
-        // isLeaveAllocated: false,
         registrationStatus: "verified",
         activeStatus: true,
       },
@@ -137,24 +124,7 @@ const editLeaveAlloctated = async (req: Request, res: Response) => {
       "leaveDetail.$.updatedBy": reqData.updatedBy,
       "leaveDetail.$.totalLeave": reqData.leaveAlloted,
     };
-    // if (reqData.leaveYear) {
-    //   const findUplicateYear = await leave.findOne({
-    //     user_id: reqData.user_id,
-    //     "leaveDetail.leaveYear": moment(reqData.leaveYear).format("YYYY"),
-    //   });
-    //   if (findUplicateYear) {
-    //     return res.status(StatusCodes.CONFLICT).json({
-    //       message: `${moment(reqData.leaveYear).format(
-    //         "YYYY"
-    //       )} Year Leave already allocated`,
-    //     });
-    //   } else {
-    //     responseBody = {
-    //       ...responseBody,
-    //       "leaveDetail.$.leaveYear": moment(reqData.leaveYear).format("YYYY"),
-    //     };
-    //   }
-    // }
+
     const findUserLeave: any = await leave.findOneAndUpdate(
       {
         "leaveDetail._id": new mongoose.Types.ObjectId(reqData._id),
@@ -185,41 +155,12 @@ const leaveApply = async (req: Request, res: Response) => {
     for (let i = 0; i < daysBetween; i++) {
       const currentDayOfWeek = moment(startDay).add(i, "days").day();
 
-      if (currentDayOfWeek === 0 || currentDayOfWeek === 6) {
+      if (currentDayOfWeek !== (0 || 6)) {
         weekends.push(moment(startDay).add(i, "days").format("YYYY-MM-DD"));
       }
     }
 
-    // return weekends
-
-    // for (
-    //   let date = startDay.clone();
-    //   date.isSameOrBefore(endDay);
-    //   date.add(1, "days")
-    // ) {
-    //   if (date.weekday() !== 6 || date.weekday() !== 0) {
-    //     weekends.push(date);
-    //   }
-    // }
-
     if (weekends.length > 0) {
-      // const findHoliday = await holidayList.findOne({
-      //   holidayYear: moment(reqData.startDay).format("YYYY"),
-      // });
-      // const a: any =
-      //   findHoliday === undefined || findHoliday === null
-      //     ? []
-      //     : findHoliday.holidayList;
-
-      // const filterDate = weekends.filter(
-      //   (item1) =>
-      //     !a.some(
-      //       (item2: any) =>
-      //         moment(item1).format("YYYY") ===
-      //         moment(item2.holidayDate).format("YYYY")
-      //     )
-      // );
-
       const findUser = await leave.aggregate([
         {
           $unwind: {
@@ -258,34 +199,34 @@ const leaveApply = async (req: Request, res: Response) => {
         (item1: any) =>
           !findUser[0]?.result?.holidayList.some(
             (item2: any) =>
-              moment(item1).format("YYYY") ===
-              moment(item2.holidayDate).format("YYYY")
+              item1 === moment(item2.holidayDate).format("YYYY-MM-DD")
           )
       );
 
-      const totalLeaveUse = findUser[0].leaveDetail.leaveUseDetail.filter(
+      const totalLeaveUse = findUser[0]?.leaveDetail?.leaveUseDetail.filter(
         (item: any) => item.leaveStatus === "approved"
       );
+
+      const leaveUseUpdate = findUser[0]?.leaveDetail?.leaveUseDetail.concat({
+        startDay: new Date(reqData.startDay),
+        endDay: new Date(reqData.endDay),
+        totalDays: filterDate.length,
+        reason: reqData.reason,
+        leaveStatus: "pending",
+        approvedBy: null,
+      });
 
       const updateLeave = await leave.findOneAndUpdate(
         {
           user_id: reqData.user_id,
           "leaveDetail.leaveYear": moment(reqData.startDay).format("YYYY"),
         },
+
         {
           $set: {
             "leaveDetail.$.totalLeaveLeft":
               findUser[0].leaveDetail.totalLeave - totalLeaveUse.length,
-            $push: {
-              "leaveDetail.$.leaveUseDetail": {
-                startDay: new Date(reqData.startDay),
-                endDay: new Date(reqData.endDay),
-                totalDays: filterDate.length,
-                reason: reqData.reason,
-                leaveStatus: "pending",
-                approvedBy: null,
-              },
-            },
+            "leaveDetail.$.leaveUseDetail": leaveUseUpdate,
           },
         }
       );
