@@ -187,21 +187,18 @@ const leaveApply = async (req: Request, res: Response) => {
             as: "result",
           },
         },
-
-        {
-          $unwind: {
-            path: "$result",
-          },
-        },
       ]);
 
-      const filterDate: any = weekends.filter(
-        (item1: any) =>
-          !findUser[0]?.result?.holidayList.some(
-            (item2: any) =>
-              item1 === moment(item2.holidayDate).format("YYYY-MM-DD")
-          )
-      );
+      const filterDate: any =
+        findUser[0]?.result.length > 0
+          ? weekends.filter(
+              (item1: any) =>
+                !findUser[0]?.result[0].holidayList.some(
+                  (item2: any) =>
+                    item1 === moment(item2.holidayDate).format("YYYY-MM-DD")
+                )
+            )
+          : weekends;
 
       const totalLeaveUse = findUser[0]?.leaveDetail?.leaveUseDetail.filter(
         (item: any) => item.leaveStatus === "approved"
