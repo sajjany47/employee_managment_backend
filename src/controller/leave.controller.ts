@@ -145,8 +145,6 @@ const leaveApply = async (req: Request, res: Response) => {
     const reqData = Object.assign({}, req.body);
     const startDay = moment(reqData.startDay).format("YYYY-MM-DD");
     const endDay = moment(reqData.endDay).format("YYYY-MM-DD");
-    // const startDayOfWeek = startDay.day();
-    // const endDayOfWeek = endDay.day();
 
     const daysBetween = moment(endDay).diff(startDay, "days");
 
@@ -241,10 +239,46 @@ const leaveApply = async (req: Request, res: Response) => {
   }
 };
 
+const applyLeaveList = async (req: Request, res: Response) => {
+  try {
+    const reqData = Object.assign({}, req.body);
+    const findLeaveList = await leave.aggregate([
+      {
+        $unwind: {
+          path: "$leaveDetail",
+        },
+      },
+      {
+        $match: {
+          $and: [
+            { user_id: reqData.user_id },
+            { "leaveDetail.leaveYear": reqData.leaveYear },
+          ],
+        },
+      },
+    ]);
+
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: findLeaveList[0] });
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+const approvedLeave = async (req: Request, res: Response) => {
+  try {
+    const reqData = Object.assign({}, req.body);
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 export {
   leaveAlloted,
   getNewUserList,
   leaveList,
   editLeaveAlloctated,
   leaveApply,
+  applyLeaveList,
 };
