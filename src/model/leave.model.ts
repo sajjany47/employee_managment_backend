@@ -14,6 +14,7 @@ const leaveSchema = new mongoose.Schema(
             endDay: Date,
             totalDays: String,
             reason: String,
+            createOn: Date,
             leaveStatus: {
               type: String,
               trim: true,

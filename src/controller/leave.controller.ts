@@ -207,6 +207,7 @@ const leaveApply = async (req: Request, res: Response) => {
         endDay: new Date(reqData.endDay),
         totalDays: filterDate.length,
         reason: reqData.reason,
+        createOn: new Date(),
         leaveStatus: "pending",
         approvedBy: null,
       });
