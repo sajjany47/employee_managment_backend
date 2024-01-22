@@ -187,49 +187,55 @@ const leaveApply = async (req: Request, res: Response) => {
         },
       ]);
 
-      const filterDate: any =
-        findUser[0]?.result.length > 0
-          ? weekends.filter(
-              (item1: any) =>
-                !findUser[0]?.result[0].holidayList.some(
-                  (item2: any) =>
-                    item1 === moment(item2.holidayDate).format("YYYY-MM-DD")
-                )
-            )
-          : weekends;
+      if (findUser.length > 0) {
+        const filterDate: any =
+          findUser[0]?.result.length > 0
+            ? weekends.filter(
+                (item1: any) =>
+                  !findUser[0]?.result[0].holidayList.some(
+                    (item2: any) =>
+                      item1 === moment(item2.holidayDate).format("YYYY-MM-DD")
+                  )
+              )
+            : weekends;
 
-      const totalLeaveUse = findUser[0]?.leaveDetail?.leaveUseDetail.filter(
-        (item: any) => item.leaveStatus === "approved"
-      );
+        const totalLeaveUse = findUser[0]?.leaveDetail?.leaveUseDetail.filter(
+          (item: any) => item.leaveStatus === "approved"
+        );
 
-      const leaveUseUpdate = findUser[0]?.leaveDetail?.leaveUseDetail.concat({
-        startDay: new Date(reqData.startDay),
-        endDay: new Date(reqData.endDay),
-        totalDays: filterDate.length,
-        reason: reqData.reason,
-        createOn: new Date(),
-        leaveStatus: "pending",
-        approvedBy: null,
-      });
+        const leaveUseUpdate = findUser[0]?.leaveDetail?.leaveUseDetail.concat({
+          startDay: new Date(reqData.startDay),
+          endDay: new Date(reqData.endDay),
+          totalDays: filterDate.length,
+          reason: reqData.reason,
+          createOn: new Date(),
+          leaveStatus: "pending",
+          approvedBy: null,
+        });
 
-      const updateLeave = await leave.findOneAndUpdate(
-        {
-          user_id: reqData.user_id,
-          "leaveDetail.leaveYear": moment(reqData.startDay).format("YYYY"),
-        },
-
-        {
-          $set: {
-            "leaveDetail.$.totalLeaveLeft":
-              findUser[0].leaveDetail.totalLeave - totalLeaveUse.length,
-            "leaveDetail.$.leaveUseDetail": leaveUseUpdate,
+        const updateLeave = await leave.findOneAndUpdate(
+          {
+            user_id: reqData.user_id,
+            "leaveDetail.leaveYear": moment(reqData.startDay).format("YYYY"),
           },
-        }
-      );
 
-      res
-        .status(StatusCodes.OK)
-        .json({ message: "Leave successfully apply, wait for approved" });
+          {
+            $set: {
+              "leaveDetail.$.totalLeaveLeft":
+                findUser[0].leaveDetail.totalLeave - totalLeaveUse.length,
+              "leaveDetail.$.leaveUseDetail": leaveUseUpdate,
+            },
+          }
+        );
+
+        return res
+          .status(StatusCodes.OK)
+          .json({ message: "Leave successfully apply, wait for approved" });
+      } else {
+        return res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ message: "User not leave alloted" });
+      }
     } else {
       return res
         .status(StatusCodes.BAD_REQUEST)
@@ -267,9 +273,31 @@ const applyLeaveList = async (req: Request, res: Response) => {
   }
 };
 
-const approvedLeave = async (req: Request, res: Response) => {
+const userApplyLeaveList = async (req: Request, res: Response) => {
   try {
-    const reqData = Object.assign({}, req.body);
+    const year = req.params.year;
+    const leaveList = await leave.aggregate([
+      {
+        $unwind: {
+          path: "$leaveDetail",
+        },
+      },
+      {
+        $unwind: {
+          path: "$leaveDetail.leaveUseDetail",
+        },
+      },
+      {
+        $match: {
+          "leaveDetail.leaveYear": year,
+          "leaveDetail.leaveUseDetail.leaveStatus": "pending",
+        },
+      },
+    ]);
+
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: leaveList });
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
