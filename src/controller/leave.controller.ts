@@ -251,11 +251,6 @@ const applyLeaveList = async (req: Request, res: Response) => {
     const reqData = Object.assign({}, req.body);
     const findLeaveList = await leave.aggregate([
       {
-        $unwind: {
-          path: "$leaveDetail",
-        },
-      },
-      {
         $match: {
           $and: [
             { user_id: reqData.user_id },
@@ -263,11 +258,27 @@ const applyLeaveList = async (req: Request, res: Response) => {
           ],
         },
       },
+      {
+        $unwind: {
+          path: "$leaveDetail",
+        },
+      },
+      {
+        $addFields: {
+          result: {
+            $sortArray: {
+              input: "$leaveDetail.leaveUseDetail",
+              sortBy: { createOn: -1 },
+            },
+          },
+        },
+      },
     ]);
 
-    res
-      .status(StatusCodes.OK)
-      .json({ message: "Data fetched successfully", data: findLeaveList[0] });
+    res.status(StatusCodes.OK).json({
+      message: "Data fetched successfully",
+      data: findLeaveList.length > 0 ? findLeaveList[0].result : [],
+    });
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
