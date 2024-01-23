@@ -264,7 +264,9 @@ const applyLeaveList = async (req: Request, res: Response) => {
         },
       },
       {
-        $addFields: {
+        $project: {
+          user_id: 1,
+
           result: {
             $sortArray: {
               input: "$leaveDetail.leaveUseDetail",
@@ -277,7 +279,7 @@ const applyLeaveList = async (req: Request, res: Response) => {
 
     res.status(StatusCodes.OK).json({
       message: "Data fetched successfully",
-      data: findLeaveList.length > 0 ? findLeaveList[0].result : [],
+      data: findLeaveList.length > 0 ? findLeaveList[0] : [],
     });
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
