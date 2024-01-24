@@ -266,8 +266,11 @@ const applyLeaveList = async (req: Request, res: Response) => {
       {
         $project: {
           user_id: 1,
+          "leaveDetail.totalLeaveLeft": 1,
+          "leaveDetail.totalLeave": 1,
+          "leaveDetail.leaveYear": 1,
 
-          result: {
+          leaveUse: {
             $sortArray: {
               input: "$leaveDetail.leaveUseDetail",
               sortBy: { createOn: -1 },
@@ -323,4 +326,5 @@ export {
   editLeaveAlloctated,
   leaveApply,
   applyLeaveList,
+  userApplyLeaveList,
 };
