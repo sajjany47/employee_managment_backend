@@ -319,6 +319,20 @@ const userApplyLeaveList = async (req: Request, res: Response) => {
   }
 };
 
+const userApplyLeaveApproved = async (req: Request, res: Response) => {
+  try {
+    const reqData = Object.assign({}, req.body);
+    const findUserLeave = await leave.findOne({
+      "leaveDetail.leaveUseDetail.$._id": new mongoose.Types.ObjectId(
+        reqData.id
+      ),
+    });
+    console.log(findUserLeave);
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 export {
   leaveAlloted,
   getNewUserList,
@@ -327,4 +341,5 @@ export {
   leaveApply,
   applyLeaveList,
   userApplyLeaveList,
+  userApplyLeaveApproved,
 };
