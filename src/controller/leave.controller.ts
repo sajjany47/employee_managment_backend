@@ -322,10 +322,7 @@ const userApplyLeaveList = async (req: Request, res: Response) => {
 const userApplyLeaveApproved = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
-    // const findUserLeave = await leave.findOne({
-    //   "leaveDetail.leaveYear": "2024",
-    //   "leaveDetail.leaveUseDetail._id": new mongoose.Types.ObjectId(reqData.id),
-    // });
+
     const updateData = await leave.findOneAndUpdate(
       {
         "leaveDetail.leaveUseDetail._id": new mongoose.Types.ObjectId(
@@ -339,7 +336,36 @@ const userApplyLeaveApproved = async (req: Request, res: Response) => {
         },
       }
     );
-    console.log(updateData);
+
+    // if (updateData) {
+    //   const findYear: any = updateData.leaveDetail.find(
+    //     (item: any) => item.leaveYear === reqData.leaveYear
+    //   );
+
+    //   if (findYear) {
+    //     const countLeave = findYear.leaveUseDetail.filter(
+    //       (item: any) => item.leaveStatus === "approved"
+    //     );
+    //     const updateDataWithLeave = await leave.findOneAndUpdate(
+    //       {
+    //         "leaveDetail.leaveUseDetail._id": new mongoose.Types.ObjectId(
+    //           reqData.id
+    //         ),
+    //       },
+    //       {
+    //         $set: {
+    //           "leaveDetail.$.totalLeaveLeft": `${
+    //             Number(findYear.totalLeaveLeft) - Number(countLeave.length)
+    //           }`,
+    //         },
+    //       }
+    //     );
+    //     console.log(updateDataWithLeave);
+    //     return res
+    //       .status(StatusCodes.OK)
+    //       .json({ message: "Leave approved successfully" });
+    //   }
+    // }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
