@@ -322,12 +322,24 @@ const userApplyLeaveList = async (req: Request, res: Response) => {
 const userApplyLeaveApproved = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
-    const findUserLeave = await leave.findOne({
-      "leaveDetail.leaveUseDetail.$._id": new mongoose.Types.ObjectId(
-        reqData.id
-      ),
-    });
-    console.log(findUserLeave);
+    // const findUserLeave = await leave.findOne({
+    //   "leaveDetail.leaveYear": "2024",
+    //   "leaveDetail.leaveUseDetail._id": new mongoose.Types.ObjectId(reqData.id),
+    // });
+    const updateData = await leave.findOneAndUpdate(
+      {
+        "leaveDetail.leaveUseDetail._id": new mongoose.Types.ObjectId(
+          reqData.id
+        ),
+      },
+      {
+        $set: {
+          "leaveDetail.$[].leaveUseDetail.$.leaveStatus": reqData.leaveStatus,
+          "leaveDetail.$[].leaveUseDetail.$.approvedBy": reqData.approvedBy,
+        },
+      }
+    );
+    console.log(updateData);
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
