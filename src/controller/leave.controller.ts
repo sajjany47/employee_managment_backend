@@ -352,7 +352,15 @@ const userApplyLeaveApproved = async (req: Request, res: Response) => {
     );
 
     if (updateData) {
-      const findYear: any = updateData.leaveDetail.find(
+      const findUser: any = await leave.findOne({
+        user_id: reqData.user_id,
+        leaveDetail: {
+          $elemMatch: {
+            leaveYear: reqData.leaveYear,
+          },
+        },
+      });
+      const findYear: any = findUser.leaveDetail.find(
         (item: any) => item.leaveYear === reqData.leaveYear
       );
 
@@ -362,7 +370,7 @@ const userApplyLeaveApproved = async (req: Request, res: Response) => {
             item._id.toString() === reqData.id &&
             item.leaveStatus === "approved"
         );
-        console.log(countLeave);
+
         const updateDataWithLeave = await leave.findOneAndUpdate(
           {
             user_id: reqData.user_id,
@@ -372,7 +380,9 @@ const userApplyLeaveApproved = async (req: Request, res: Response) => {
             $set: {
               "leaveDetail.$.totalLeaveLeft":
                 findYear.totalLeaveLeft -
-                (countLeave === undefined ? "0" : countLeave.totalDays),
+                (countLeave === undefined
+                  ? Number("0")
+                  : Number(countLeave.totalDays)),
             },
           }
         );
