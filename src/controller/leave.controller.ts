@@ -269,6 +269,7 @@ const applyLeaveList = async (req: Request, res: Response) => {
           "leaveDetail.totalLeaveLeft": 1,
           "leaveDetail.totalLeave": 1,
           "leaveDetail.leaveYear": 1,
+          "leaveDetail._id": 1,
 
           leaveUse: {
             $sortArray: {
@@ -325,47 +326,62 @@ const userApplyLeaveApproved = async (req: Request, res: Response) => {
 
     const updateData = await leave.findOneAndUpdate(
       {
-        "leaveDetail.leaveUseDetail._id": new mongoose.Types.ObjectId(
-          reqData.id
-        ),
+        user_id: reqData.user_id,
+        leaveDetail: {
+          $elemMatch: {
+            leaveYear: reqData.leaveYear,
+            "leaveUseDetail._id": new mongoose.Types.ObjectId(reqData.id),
+          },
+        },
       },
+
       {
         $set: {
-          "leaveDetail.$[].leaveUseDetail.$.leaveStatus": reqData.leaveStatus,
-          "leaveDetail.$[].leaveUseDetail.$.approvedBy": reqData.approvedBy,
+          "leaveDetail.$[outer].leaveUseDetail.$[inner].leaveStatus":
+            reqData.leaveStatus,
+          "leaveDetail.$[outer].leaveUseDetail.$[inner].approvedBy":
+            reqData.approvedBy,
         },
+      },
+      {
+        arrayFilters: [
+          { "outer._id": new mongoose.Types.ObjectId(reqData.outerId) },
+          { "inner._id": new mongoose.Types.ObjectId(reqData.id) },
+        ],
       }
     );
 
-    // if (updateData) {
-    //   const findYear: any = updateData.leaveDetail.find(
-    //     (item: any) => item.leaveYear === reqData.leaveYear
-    //   );
+    if (updateData) {
+      const findYear: any = updateData.leaveDetail.find(
+        (item: any) => item.leaveYear === reqData.leaveYear
+      );
 
-    //   if (findYear) {
-    //     const countLeave = findYear.leaveUseDetail.filter(
-    //       (item: any) => item.leaveStatus === "approved"
-    //     );
-    //     const updateDataWithLeave = await leave.findOneAndUpdate(
-    //       {
-    //         "leaveDetail.leaveUseDetail._id": new mongoose.Types.ObjectId(
-    //           reqData.id
-    //         ),
-    //       },
-    //       {
-    //         $set: {
-    //           "leaveDetail.$.totalLeaveLeft": `${
-    //             Number(findYear.totalLeaveLeft) - Number(countLeave.length)
-    //           }`,
-    //         },
-    //       }
-    //     );
-    //     console.log(updateDataWithLeave);
-    //     return res
-    //       .status(StatusCodes.OK)
-    //       .json({ message: "Leave approved successfully" });
-    //   }
-    // }
+      if (findYear) {
+        const countLeave = findYear.leaveUseDetail.find(
+          (item: any) =>
+            item._id.toString() === reqData.id &&
+            item.leaveStatus === "approved"
+        );
+        console.log(countLeave);
+        const updateDataWithLeave = await leave.findOneAndUpdate(
+          {
+            user_id: reqData.user_id,
+            leaveDetail: { $elemMatch: { leaveYear: reqData.leaveYear } },
+          },
+          {
+            $set: {
+              "leaveDetail.$.totalLeaveLeft":
+                findYear.totalLeaveLeft -
+                (countLeave === undefined ? "0" : countLeave.totalDays),
+            },
+          }
+        );
+
+        return res
+          .status(StatusCodes.OK)
+          .json({ message: "Leave approved successfully" });
+      }
+    }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
