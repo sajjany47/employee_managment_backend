@@ -8,8 +8,7 @@ const timeData = new mongoose.Schema(
         year: String,
         timeData: [
           {
-            startTime: String,
-            endTime: String,
+            timeDetails: [{ startTime: String, endTime: String }],
             date: String,
             totalTime: Number,
           },

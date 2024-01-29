@@ -160,4 +160,86 @@ const multiUserLeaveAdd = async (
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
 };
+
+const userTimeData = async (req: Request, res: Response) => {
+  try {
+    const reqData = Object.assign({}, req.body);
+    const startTime = moment(reqData.startTime).format("YYYY-MM-DD HH:mm:ss");
+    const endTime = moment(reqData.endTime).format("YYYY-MM-DD HH:mm:ss");
+    const checkValidUser = await user.findOne({ username: reqData.username });
+    if (checkValidUser) {
+      const findUser = await timeRecord.findOne({ username: reqData.username });
+      if (findUser) {
+        const findYear = await timeRecord.findOne({
+          username: reqData.username,
+          "timeSchedule.year": moment(reqData.startTime).format("YYYY"),
+        });
+
+        if (findYear) {
+        } else {
+          await timeRecord.findOneAndUpdate(
+            { username: reqData.username },
+            {
+              $push: {
+                timeSchedule: {
+                  year: moment(reqData.startTime).format("YYYY"),
+                  timeData: [
+                    {
+                      timeDetails: [
+                        {
+                          startTime: new Date(reqData.startTime),
+                          endTime: new Date(reqData.endTime),
+                        },
+                      ],
+                      date: new Date(reqData.startTime),
+                      totalTime: moment(endTime).diff(startTime, "seconds"),
+                    },
+                  ],
+                },
+              },
+            }
+          );
+
+          return res
+            .status(StatusCodes.OK)
+            .json({ message: "Time recorded successfully" });
+        }
+      } else {
+        const insertTimeRecord = new timeRecord({
+          username: reqData.username,
+          timeSchedule: [
+            {
+              year: moment(reqData.startTime).format("YYYY"),
+              timeData: [
+                {
+                  timeDetails: [
+                    {
+                      startTime: new Date(reqData.startTime),
+                      endTime: new Date(reqData.endTime),
+                    },
+                  ],
+                  date: new Date(reqData.startTime),
+                  totalTime: moment(endTime).diff(startTime, "seconds"),
+                },
+              ],
+            },
+          ],
+        });
+
+        await insertTimeRecord.save();
+
+        return res
+          .status(StatusCodes.OK)
+          .json({ message: "Time recorded successfully" });
+      }
+    } else {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "User not found!" });
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 export { timeData, leaveApply, singleUserLeaveAdd, multiUserLeaveAdd };
