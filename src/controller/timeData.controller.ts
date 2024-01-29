@@ -176,6 +176,18 @@ const userTimeData = async (req: Request, res: Response) => {
         });
 
         if (findYear) {
+          const findYearData: any = findYear.timeSchedule.find(
+            (item: any) =>
+              item.year === moment(reqData.startTime).format("YYYY")
+          );
+          const findDate = findYearData.timeData.find(
+            (item: any) =>
+              moment(item.date).format("YYYY-MM-DD") ===
+              moment(reqData.startTime).format("YYYY-MM-DD")
+          );
+          if (findDate) {
+          } else {
+          }
         } else {
           await timeRecord.findOneAndUpdate(
             { username: reqData.username },
