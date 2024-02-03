@@ -164,76 +164,38 @@ const multiUserLeaveAdd = async (
 const userTimeData = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
-    const startTime = moment(reqData.startTime).format("YYYY-MM-DD HH:mm:ss");
-    const endTime = moment(reqData.endTime).format("YYYY-MM-DD HH:mm:ss");
     const checkValidUser = await user.findOne({ username: reqData.username });
     if (checkValidUser) {
       const findUser = await timeRecord.findOne({ username: reqData.username });
       if (findUser) {
-        const findYear = await timeRecord.findOne({
-          username: reqData.username,
-          "timeSchedule.year": moment(reqData.startTime).format("YYYY"),
-        });
-
-        if (findYear) {
-          const findYearData: any = findYear.timeSchedule.find(
-            (item: any) =>
-              item.year === moment(reqData.startTime).format("YYYY")
-          );
-          const findDate = findYearData.timeData.find(
-            (item: any) =>
-              moment(item.date).format("YYYY-MM-DD") ===
-              moment(reqData.startTime).format("YYYY-MM-DD")
-          );
-          if (findDate) {
-          } else {
-          }
-        } else {
-          await timeRecord.findOneAndUpdate(
-            { username: reqData.username },
-            {
-              $push: {
-                timeSchedule: {
-                  year: moment(reqData.startTime).format("YYYY"),
-                  timeData: [
-                    {
-                      timeDetails: [
-                        {
-                          startTime: new Date(reqData.startTime),
-                          endTime: new Date(reqData.endTime),
-                        },
-                      ],
-                      date: new Date(reqData.startTime),
-                      totalTime: moment(endTime).diff(startTime, "seconds"),
-                    },
-                  ],
-                },
+        await timeRecord.findOneAndUpdate(
+          {
+            username: reqData.username,
+          },
+          {
+            $push: {
+              timeSchedule: {
+                date: new Date(reqData.date),
+                totalTime: reqData.totalTime,
+                startTime: new Date(reqData.startTime),
+                endTime: new Date(reqData.endTime),
               },
-            }
-          );
+            },
+          }
+        );
 
-          return res
-            .status(StatusCodes.OK)
-            .json({ message: "Time recorded successfully" });
-        }
+        return res
+          .status(StatusCodes.OK)
+          .json({ message: "Time recorded successfully" });
       } else {
         const insertTimeRecord = new timeRecord({
           username: reqData.username,
           timeSchedule: [
             {
-              year: moment(reqData.startTime).format("YYYY"),
-              timeData: [
-                {
-                  timeDetails: [
-                    {
-                      startTime: new Date(reqData.startTime),
-                      endTime: new Date(reqData.endTime),
-                    },
-                  ],
-                  date: new Date(reqData.startTime),
-                  totalTime: moment(endTime).diff(startTime, "seconds"),
-                },
-              ],
+              date: new Date(reqData.date),
+              totalTime: reqData.totalTime,
+              startTime: new Date(reqData.startTime),
+              endTime: new Date(reqData.endTime),
             },
           ],
         });
