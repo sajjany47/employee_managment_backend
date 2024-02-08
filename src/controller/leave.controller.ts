@@ -143,18 +143,18 @@ const editLeaveAlloctated = async (req: Request, res: Response) => {
 const leaveApply = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
-    const startDay = moment(reqData.startDay).format("YYYY-MM-DD");
-    const endDay = moment(reqData.endDay).format("YYYY-MM-DD");
+    const startDay = moment(reqData.startDay);
+    const endDay = moment(reqData.endDay);
 
-    const daysBetween = moment(endDay).diff(startDay, "days");
+    const weekends: any = [];
 
-    const weekends = [];
-
-    for (let i = 0; i < daysBetween; i++) {
-      const currentDayOfWeek = moment(startDay).add(i, "days").day();
-
-      if (currentDayOfWeek !== (0 || 6)) {
-        weekends.push(moment(startDay).add(i, "days").format("YYYY-MM-DD"));
+    for (
+      let date = startDay;
+      date.isSameOrBefore(endDay);
+      date.add(1, "days")
+    ) {
+      if (date.day() !== 0 && date.day() !== 6) {
+        weekends.push(date.format("YYYY-MM-DD"));
       }
     }
 
