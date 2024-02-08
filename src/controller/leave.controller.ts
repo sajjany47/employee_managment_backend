@@ -149,12 +149,12 @@ const leaveApply = async (req: Request, res: Response) => {
     const weekends: any = [];
 
     for (
-      let date = startDay;
+      let date: any = startDay;
       date.isSameOrBefore(endDay);
       date.add(1, "days")
     ) {
       if (date.day() !== 0 && date.day() !== 6) {
-        weekends.push(date.format("YYYY-MM-DD"));
+        weekends.push(new Date(date));
       }
     }
 

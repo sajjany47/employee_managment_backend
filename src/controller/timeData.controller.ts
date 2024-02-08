@@ -5,6 +5,7 @@ import timeRecord from "../model/timeData.model";
 import moment from "moment";
 import leave from "../model/leave.model";
 import mongoose from "mongoose";
+import holidayList from "../model/holiday.model";
 
 const timeData = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -164,52 +165,61 @@ const multiUserLeaveAdd = async (
 const userTimeData = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
-    const checkValidUser = await user.findOne({ username: reqData.username });
-    if (checkValidUser) {
-      const findUser = await timeRecord.findOne({ username: reqData.username });
-      if (findUser) {
-        await timeRecord.findOneAndUpdate(
-          {
+    const checkHolidayList: any = await holidayList.findOne({
+      "holidayList.holidayDate": new Date(reqData.date),
+    });
+    if (checkHolidayList) {
+      return res.status(StatusCodes.OK).json({ message: "Today is Holiday" });
+    } else {
+      const checkValidUser = await user.findOne({ username: reqData.username });
+      if (checkValidUser) {
+        const findUser = await timeRecord.findOne({
+          username: reqData.username,
+        });
+        if (findUser) {
+          await timeRecord.findOneAndUpdate(
+            {
+              username: reqData.username,
+            },
+            {
+              $push: {
+                timeSchedule: {
+                  date: new Date(reqData.date),
+                  totalTime: reqData.totalTime,
+                  startTime: new Date(reqData.startTime),
+                  endTime: new Date(reqData.endTime),
+                },
+              },
+            }
+          );
+
+          return res
+            .status(StatusCodes.OK)
+            .json({ message: "Time recorded successfully" });
+        } else {
+          const insertTimeRecord = new timeRecord({
             username: reqData.username,
-          },
-          {
-            $push: {
-              timeSchedule: {
+            timeSchedule: [
+              {
                 date: new Date(reqData.date),
                 totalTime: reqData.totalTime,
                 startTime: new Date(reqData.startTime),
                 endTime: new Date(reqData.endTime),
               },
-            },
-          }
-        );
+            ],
+          });
 
-        return res
-          .status(StatusCodes.OK)
-          .json({ message: "Time recorded successfully" });
+          await insertTimeRecord.save();
+
+          return res
+            .status(StatusCodes.OK)
+            .json({ message: "Time recorded successfully" });
+        }
       } else {
-        const insertTimeRecord = new timeRecord({
-          username: reqData.username,
-          timeSchedule: [
-            {
-              date: new Date(reqData.date),
-              totalTime: reqData.totalTime,
-              startTime: new Date(reqData.startTime),
-              endTime: new Date(reqData.endTime),
-            },
-          ],
-        });
-
-        await insertTimeRecord.save();
-
         return res
-          .status(StatusCodes.OK)
-          .json({ message: "Time recorded successfully" });
+          .status(StatusCodes.NOT_FOUND)
+          .json({ message: "User not found!" });
       }
-    } else {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ message: "User not found!" });
     }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
