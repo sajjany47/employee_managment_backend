@@ -165,120 +165,143 @@ const multiUserLeaveAdd = async (
 const userTimeData = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
-    const checkHolidayList: any = await holidayList.findOne({
-      "holidayList.holidayDate": new Date(reqData.date),
-    });
-    if (checkHolidayList) {
-      return res.status(StatusCodes.OK).json({ message: "Today is Holiday" });
-    } else {
-      const checkValidUser = await user.findOne({ username: reqData.username });
-      if (checkValidUser) {
-        //////////////////////////////////////////////////////////////////////////
-
-        const checkLeave: any = await leave.aggregate([
-          {
-            $match: {
-              user_id: reqData.username,
+    if (moment(reqData.date).day() !== 0 && moment(reqData.date).day() !== 6) {
+      const checkHolidayList: any = await holidayList.findOne({
+        "holidayList.holidayDate": new Date(reqData.date),
+      });
+      if (checkHolidayList) {
+        return res.status(StatusCodes.OK).json({ message: "Today is Holiday" });
+      } else {
+        const checkValidUser = await user.findOne({
+          username: reqData.username,
+        });
+        if (checkValidUser) {
+          const checkLeave: any = await leave.aggregate([
+            {
+              $match: {
+                user_id: reqData.username,
+              },
             },
-          },
-          {
-            $unwind: {
-              path: "$leaveDetail",
+            {
+              $unwind: {
+                path: "$leaveDetail",
+              },
             },
-          },
-          {
-            $match: {
-              "leaveDetail.leaveYear": moment(reqData.date).format("YYYY"),
+            {
+              $match: {
+                "leaveDetail.leaveYear": moment(reqData.date).format("YYYY"),
+              },
             },
-          },
-        ]);
+          ]);
 
-        if (checkLeave.length > 0) {
-          const filterLeave = checkLeave[0].leaveDetail.leaveUseDetail.filter(
-            (item: any) => item.leaveStatus === "approved"
-          );
+          if (checkLeave.length > 0) {
+            const filterLeave = checkLeave[0].leaveDetail.leaveUseDetail.filter(
+              (item: any) => item.leaveStatus === "approved"
+            );
 
-          const leaveList = [];
-          filterLeave.forEach((element: any) => {
-            for (
-              let date: any = moment(element.startDay);
-              date.isSameOrBefore(moment(element.startDay));
-              date.add(1, "days")
-            ) {
-              if (date.day() !== 0 && date.day() !== 6) {
-                if (
-                  moment(date).format("YYYY-MM-DD") ===
-                  moment(reqData.date).format("YYYY-MM-DD")
-                ) {
-                  leaveList.push(moment(date).format("YYYY-MM-DD"));
+            const leaveList = [];
+            filterLeave.forEach((element: any) => {
+              for (
+                let date: any = moment(element.startDay);
+                date.isSameOrBefore(moment(element.startDay));
+                date.add(1, "days")
+              ) {
+                if (date.day() !== 0 && date.day() !== 6) {
+                  if (
+                    moment(date).format("YYYY-MM-DD") ===
+                    moment(reqData.date).format("YYYY-MM-DD")
+                  ) {
+                    leaveList.push(moment(date).format("YYYY-MM-DD"));
+                  }
                 }
               }
-            }
-          });
-          if (leaveList.length > 0) {
-            return res
-              .status(StatusCodes.BAD_REQUEST)
-              .json({ message: "You applied leave on today" });
-          } else {
-            const findUser = await timeRecord.findOne({
-              username: reqData.username,
             });
-            if (findUser) {
-              await timeRecord.findOneAndUpdate(
-                {
+            if (leaveList.length > 0) {
+              return res.status(StatusCodes.BAD_REQUEST).json({
+                message: "You already applied leave on today ! contact HR team",
+              });
+            } else {
+              const findUser = await timeRecord.findOne({
+                username: reqData.username,
+              });
+              if (findUser) {
+                const findValidDate = await timeRecord.findOne({
                   username: reqData.username,
-                },
-                {
-                  $push: {
-                    timeSchedule: {
-                      date: new Date(reqData.date),
+                  "timeSchedule.date": moment(reqData.date).format(
+                    "YYYY-MM-DD"
+                  ),
+                });
+                if (findValidDate) {
+                  return res.status(StatusCodes.BAD_REQUEST).json({
+                    message:
+                      "Already today attendance created ! contact HR team",
+                  });
+                } else {
+                  await timeRecord.findOneAndUpdate(
+                    {
+                      username: reqData.username,
+                    },
+                    {
+                      $push: {
+                        timeSchedule: {
+                          date: moment(reqData.date).format("YYYY-MM-DD"),
+                          totalTime: reqData.totalTime,
+                          startTime: new Date(reqData.startTime),
+                          endTime: new Date(reqData.endTime),
+                        },
+                      },
+                    }
+                  );
+
+                  return res
+                    .status(StatusCodes.OK)
+                    .json({ message: "Time recorded successfully" });
+                }
+              } else {
+                const insertTimeRecord = new timeRecord({
+                  username: reqData.username,
+                  timeSchedule: [
+                    {
+                      date: moment(reqData.date).format("YYYY-MM-DD"),
                       totalTime: reqData.totalTime,
                       startTime: new Date(reqData.startTime),
                       endTime: new Date(reqData.endTime),
                     },
-                  },
-                }
-              );
+                  ],
+                });
 
-              return res
-                .status(StatusCodes.OK)
-                .json({ message: "Time recorded successfully" });
-            } else {
-              const insertTimeRecord = new timeRecord({
-                username: reqData.username,
-                timeSchedule: [
-                  {
-                    date: new Date(reqData.date),
-                    totalTime: reqData.totalTime,
-                    startTime: new Date(reqData.startTime),
-                    endTime: new Date(reqData.endTime),
-                  },
-                ],
-              });
+                await insertTimeRecord.save();
 
-              await insertTimeRecord.save();
-
-              return res
-                .status(StatusCodes.OK)
-                .json({ message: "Time recorded successfully" });
+                return res
+                  .status(StatusCodes.OK)
+                  .json({ message: "Time recorded successfully" });
+              }
             }
+          } else {
+            res
+              .status(StatusCodes.BAD_REQUEST)
+              .json({ message: "User leave not alloted" });
           }
         } else {
-          res
-            .status(StatusCodes.BAD_REQUEST)
-            .json({ message: "User leave not alloted" });
+          return res
+            .status(StatusCodes.NOT_FOUND)
+            .json({ message: "User not found!" });
         }
-
-        ///////////////////////////////////////////////////////////////////////////
-      } else {
-        return res
-          .status(StatusCodes.NOT_FOUND)
-          .json({ message: "User not found!" });
       }
+    } else {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: "Today is weekend holiday" });
     }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
 };
 
-export { timeData, leaveApply, singleUserLeaveAdd, multiUserLeaveAdd };
+export {
+  timeData,
+  leaveApply,
+  singleUserLeaveAdd,
+  multiUserLeaveAdd,
+  userTimeData,
+};

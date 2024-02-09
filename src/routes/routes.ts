@@ -12,7 +12,10 @@ import {
   userVerified,
 } from "../controller/user.controller";
 import { auth } from "../middleware/auth.middleware";
-import { multiUserLeaveAdd, timeData } from "../controller/timeData.controller";
+import {
+  multiUserLeaveAdd,
+  userTimeData,
+} from "../controller/timeData.controller";
 import { employeeList } from "../controller/employee.controller";
 import {
   createHolidayList,
@@ -53,8 +56,9 @@ routes.route("/leave-apply-list").post(auth, applyLeaveList);
 routes.route("/leave-apply-list/:year").get(auth, userApplyLeaveList);
 routes.route("/leave-approved").post(userApplyLeaveApproved);
 routes.route("/leave-alloted/edit").post(auth, editLeaveAlloctated);
+routes.route("/time-record").post(auth, userTimeData);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
-routes.route("/time-record").post(auth, timeData);
+
 routes.route("/user-datatable").post(auth, userDatatTable);
 
 export default routes;
