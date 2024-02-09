@@ -173,48 +173,103 @@ const userTimeData = async (req: Request, res: Response) => {
     } else {
       const checkValidUser = await user.findOne({ username: reqData.username });
       if (checkValidUser) {
-        const findUser = await timeRecord.findOne({
-          username: reqData.username,
-        });
-        if (findUser) {
-          await timeRecord.findOneAndUpdate(
-            {
-              username: reqData.username,
+        //////////////////////////////////////////////////////////////////////////
+
+        const checkLeave: any = await leave.aggregate([
+          {
+            $match: {
+              user_id: reqData.username,
             },
-            {
-              $push: {
-                timeSchedule: {
-                  date: new Date(reqData.date),
-                  totalTime: reqData.totalTime,
-                  startTime: new Date(reqData.startTime),
-                  endTime: new Date(reqData.endTime),
-                },
-              },
-            }
+          },
+          {
+            $unwind: {
+              path: "$leaveDetail",
+            },
+          },
+          {
+            $match: {
+              "leaveDetail.leaveYear": moment(reqData.date).format("YYYY"),
+            },
+          },
+        ]);
+
+        if (checkLeave.length > 0) {
+          const filterLeave = checkLeave[0].leaveDetail.leaveUseDetail.filter(
+            (item: any) => item.leaveStatus === "approved"
           );
 
-          return res
-            .status(StatusCodes.OK)
-            .json({ message: "Time recorded successfully" });
-        } else {
-          const insertTimeRecord = new timeRecord({
-            username: reqData.username,
-            timeSchedule: [
-              {
-                date: new Date(reqData.date),
-                totalTime: reqData.totalTime,
-                startTime: new Date(reqData.startTime),
-                endTime: new Date(reqData.endTime),
-              },
-            ],
+          const leaveList = [];
+          filterLeave.forEach((element: any) => {
+            for (
+              let date: any = moment(element.startDay);
+              date.isSameOrBefore(moment(element.startDay));
+              date.add(1, "days")
+            ) {
+              if (date.day() !== 0 && date.day() !== 6) {
+                if (
+                  moment(date).format("YYYY-MM-DD") ===
+                  moment(reqData.date).format("YYYY-MM-DD")
+                ) {
+                  leaveList.push(moment(date).format("YYYY-MM-DD"));
+                }
+              }
+            }
           });
+          if (leaveList.length > 0) {
+            return res
+              .status(StatusCodes.OK)
+              .json({ message: "You applied leave on today" });
+          } else {
+            const findUser = await timeRecord.findOne({
+              username: reqData.username,
+            });
+            if (findUser) {
+              await timeRecord.findOneAndUpdate(
+                {
+                  username: reqData.username,
+                },
+                {
+                  $push: {
+                    timeSchedule: {
+                      date: new Date(reqData.date),
+                      totalTime: reqData.totalTime,
+                      startTime: new Date(reqData.startTime),
+                      endTime: new Date(reqData.endTime),
+                    },
+                  },
+                }
+              );
 
-          await insertTimeRecord.save();
+              return res
+                .status(StatusCodes.OK)
+                .json({ message: "Time recorded successfully" });
+            } else {
+              const insertTimeRecord = new timeRecord({
+                username: reqData.username,
+                timeSchedule: [
+                  {
+                    date: new Date(reqData.date),
+                    totalTime: reqData.totalTime,
+                    startTime: new Date(reqData.startTime),
+                    endTime: new Date(reqData.endTime),
+                  },
+                ],
+              });
 
-          return res
-            .status(StatusCodes.OK)
-            .json({ message: "Time recorded successfully" });
+              await insertTimeRecord.save();
+
+              return res
+                .status(StatusCodes.OK)
+                .json({ message: "Time recorded successfully" });
+            }
+          }
+        } else {
+          res
+            .status(StatusCodes.BAD_REQUEST)
+            .json({ message: "User leave not alloted" });
         }
+
+        ///////////////////////////////////////////////////////////////////////////
       } else {
         return res
           .status(StatusCodes.NOT_FOUND)
