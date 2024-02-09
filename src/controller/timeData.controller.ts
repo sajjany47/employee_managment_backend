@@ -217,7 +217,7 @@ const userTimeData = async (req: Request, res: Response) => {
           });
           if (leaveList.length > 0) {
             return res
-              .status(StatusCodes.OK)
+              .status(StatusCodes.BAD_REQUEST)
               .json({ message: "You applied leave on today" });
           } else {
             const findUser = await timeRecord.findOne({
