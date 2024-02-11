@@ -47,7 +47,9 @@ const createHolidayList = async (req: Request, res: Response) => {
     if (findYear) {
       const findHolidayList: any = await holidayList.findOne({
         holidayYear: formatYear,
-        "holidayList.holidayDate": new Date(reqData.holidayDate),
+        "holidayList.holidayDate": moment(reqData.holidayDate).format(
+          "YYYY-MM-DD"
+        ),
       });
 
       if (findHolidayList) {
@@ -62,7 +64,7 @@ const createHolidayList = async (req: Request, res: Response) => {
           {
             $push: {
               holidayList: {
-                holidayDate: new Date(reqData.holidayDate),
+                holidayDate: moment(reqData.holidayDate).format("YYYY-MM-DD"),
                 reason: reqData.reason,
                 createdBy: reqData.createdBy,
               },
@@ -79,7 +81,7 @@ const createHolidayList = async (req: Request, res: Response) => {
       const holidayData: any = new holidayList({
         holidayYear: formatYear,
         holidayList: {
-          holidayDate: new Date(reqData.holidayDate),
+          holidayDate: moment(reqData.holidayDate).format("YYYY-MM-DD"),
           reason: reqData.reason,
           createdBy: reqData.createdBy,
         },

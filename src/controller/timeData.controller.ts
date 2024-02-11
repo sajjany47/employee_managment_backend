@@ -167,7 +167,7 @@ const userTimeData = async (req: Request, res: Response) => {
     const reqData = Object.assign({}, req.body);
     if (moment(reqData.date).day() !== 0 && moment(reqData.date).day() !== 6) {
       const checkHolidayList: any = await holidayList.findOne({
-        "holidayList.holidayDate": new Date(reqData.date),
+        "holidayList.holidayDate": moment(reqData.date).format("YYYY-MM-DD"),
       });
       if (checkHolidayList) {
         return res.status(StatusCodes.OK).json({ message: "Today is Holiday" });

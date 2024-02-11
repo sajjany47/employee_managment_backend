@@ -54,7 +54,7 @@ routes.route("/leave-alloted-list/:id").get(auth, leaveList);
 routes.route("/leave-apply").post(auth, leaveApply);
 routes.route("/leave-apply-list").post(auth, applyLeaveList);
 routes.route("/leave-apply-list/:year").get(auth, userApplyLeaveList);
-routes.route("/leave-approved").post(userApplyLeaveApproved);
+routes.route("/leave-approved").post(auth, userApplyLeaveApproved);
 routes.route("/leave-alloted/edit").post(auth, editLeaveAlloctated);
 routes.route("/time-record").post(auth, userTimeData);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
