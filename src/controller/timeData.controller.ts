@@ -162,7 +162,7 @@ const multiUserLeaveAdd = async (
   }
 };
 
-const userTimeData = async (req: Request, res: Response) => {
+const userTimeDetails = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
     if (moment(reqData.date).day() !== 0 && moment(reqData.date).day() !== 6) {
@@ -298,10 +298,207 @@ const userTimeData = async (req: Request, res: Response) => {
   }
 };
 
+const userTimeData = async (req: Request, res: Response) => {
+  try {
+    const reqData = Object.assign({}, req.body);
+    if (moment(reqData.date).day() !== 0 && moment(reqData.date).day() !== 6) {
+      const checkHolidayList: any = await holidayList.findOne({
+        "holidayList.holidayDate": moment(reqData.date).format("YYYY-MM-DD"),
+      });
+      if (checkHolidayList) {
+        return res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ message: "Today is Holiday" });
+      } else {
+        const checkValidUser = await user.findOne({
+          username: reqData.username,
+        });
+        if (checkValidUser) {
+          const checkLeave: any = await leave.aggregate([
+            {
+              $match: {
+                user_id: reqData.username,
+              },
+            },
+            {
+              $unwind: {
+                path: "$leaveDetail",
+              },
+            },
+            {
+              $match: {
+                "leaveDetail.leaveYear": moment(reqData.date).format("YYYY"),
+              },
+            },
+          ]);
+
+          if (checkLeave.length > 0) {
+            const filterLeave = checkLeave[0].leaveDetail.leaveUseDetail.filter(
+              (item: any) => item.leaveStatus === "approved"
+            );
+
+            const leaveList = [];
+            filterLeave.forEach((element: any) => {
+              for (
+                let date: any = moment(element.startDay);
+                date.isSameOrBefore(moment(element.startDay));
+                date.add(1, "days")
+              ) {
+                if (date.day() !== 0 && date.day() !== 6) {
+                  if (
+                    moment(date).format("YYYY-MM-DD") ===
+                    moment(reqData.date).format("YYYY-MM-DD")
+                  ) {
+                    leaveList.push(moment(date).format("YYYY-MM-DD"));
+                  }
+                }
+              }
+            });
+            if (leaveList.length > 0) {
+              return res.status(StatusCodes.BAD_REQUEST).json({
+                message: "You already applied leave on today ! contact HR team",
+              });
+            } else {
+              const findUser = await timeRecord.findOne({
+                username: reqData.username,
+              });
+              if (findUser) {
+                const findValidDate = await timeRecord.findOne({
+                  username: reqData.username,
+                  "timeSchedule.date": moment(reqData.date).format(
+                    "YYYY-MM-DD"
+                  ),
+                });
+                if (findValidDate) {
+                  const findDate = findValidDate.timeSchedule.find(
+                    (item: any) =>
+                      moment(item.startTime).format("YYYY-MM-DD") ===
+                      moment(reqData.endTime).format("YYYY-MM-DD")
+                  );
+                  if (findDate) {
+                    const findValidDateUpdate = await timeRecord.updateOne(
+                      {
+                        username: reqData.username,
+                        "timeSchedule.date": moment(reqData.date).format(
+                          "YYYY-MM-DD"
+                        ),
+                      },
+                      {
+                        $set: {
+                          "timeSchedule.$.endTime": new Date(reqData.endTime),
+                          "timeSchedule.$.totalTime": reqData.totalTime,
+                          "timeSchedule.$.startDisabled": true,
+                          "timeSchedule.$.endDisabled": true,
+                        },
+                      }
+                    );
+                    return res.status(StatusCodes.OK).json({
+                      message: "Today attendance created",
+                    });
+                  } else {
+                    return res
+                      .status(StatusCodes.BAD_REQUEST)
+                      .json({ message: "Start Date and End Date not match" });
+                  }
+                } else {
+                  await timeRecord.findOneAndUpdate(
+                    {
+                      username: reqData.username,
+                    },
+                    {
+                      $push: {
+                        timeSchedule: {
+                          date: moment(reqData.date).format("YYYY-MM-DD"),
+                          startDisabled: true,
+                          endDisabled: false,
+                          totalTime: null,
+                          startTime: new Date(reqData.startTime),
+                          endTime: null,
+                        },
+                      },
+                    }
+                  );
+
+                  return res
+                    .status(StatusCodes.OK)
+                    .json({ message: "Time recorded successfully" });
+                }
+              } else {
+                const insertTimeRecord = new timeRecord({
+                  username: reqData.username,
+                  timeSchedule: [
+                    {
+                      date: moment(reqData.date).format("YYYY-MM-DD"),
+                      totalTime: null,
+                      startTime: new Date(reqData.startTime),
+                      endTime: null,
+                      startDisabled: true,
+                      endDisabled: false,
+                    },
+                  ],
+                });
+
+                await insertTimeRecord.save();
+
+                return res
+                  .status(StatusCodes.OK)
+                  .json({ message: "Time recorded successfully" });
+              }
+            }
+          } else {
+            res
+              .status(StatusCodes.BAD_REQUEST)
+              .json({ message: "User leave not alloted" });
+          }
+        } else {
+          return res
+            .status(StatusCodes.NOT_FOUND)
+            .json({ message: "User not found!" });
+        }
+      }
+    } else {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: "Today is weekend holiday" });
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+const userDailyCheck = async (req: Request, res: Response) => {
+  try {
+    const reqData = Object.assign({}, req.body);
+    const findUserDate = await timeRecord.findOne({
+      username: reqData.username,
+      "timeSchedule.date": moment(reqData.checkDate).format("YYYY-MM-DD"),
+    });
+    if (findUserDate) {
+      const findDate = findUserDate.timeSchedule.find(
+        (item: any) =>
+          moment(item.date).format("YYYY-MM-DD") ===
+          moment(reqData.checkDate).format("YYYY-MM-DD")
+      );
+
+      return res
+        .status(StatusCodes.OK)
+        .json({ message: "Data fetched successfully", data: findDate });
+    } else {
+      return res.status(StatusCodes.OK).json({
+        message: "Data fetched successfully",
+        data: { startDisabled: false, endDisabled: true },
+      });
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 export {
   timeData,
   leaveApply,
   singleUserLeaveAdd,
   multiUserLeaveAdd,
   userTimeData,
+  userDailyCheck,
 };

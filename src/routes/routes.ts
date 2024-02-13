@@ -14,6 +14,7 @@ import {
 import { auth } from "../middleware/auth.middleware";
 import {
   multiUserLeaveAdd,
+  userDailyCheck,
   userTimeData,
 } from "../controller/timeData.controller";
 import { employeeList } from "../controller/employee.controller";
@@ -57,6 +58,7 @@ routes.route("/leave-apply-list/:year").get(auth, userApplyLeaveList);
 routes.route("/leave-approved").post(auth, userApplyLeaveApproved);
 routes.route("/leave-alloted/edit").post(auth, editLeaveAlloctated);
 routes.route("/time-record").post(auth, userTimeData);
+routes.route("/date-check").post(auth, userDailyCheck);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 
 routes.route("/user-datatable").post(auth, userDatatTable);
