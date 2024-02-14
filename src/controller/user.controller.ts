@@ -4,6 +4,7 @@ import user from "../model/user.model";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
+import mongoose from "mongoose";
 
 const generateActivationKey = async (req: Request, res: Response) => {
   try {
@@ -40,7 +41,7 @@ const generateActivationKey = async (req: Request, res: Response) => {
         skill: null,
         address: null,
         state: null,
-        district: null,
+        country: null,
         city: null,
         pincode: null,
         isLeaveAllocated: false,
@@ -148,7 +149,7 @@ const userUpdate = async (req: Request, res: Response) => {
         skill: reqData.skill,
         address: reqData.address,
         state: reqData.state,
-        district: reqData.district,
+        country: reqData.country,
         city: reqData.city,
         pincode: reqData.pincode,
         education: reqData.education,
@@ -366,7 +367,10 @@ const userVerified = async (req: Request, res: Response) => {
 const singleUser = async (req: Request, res: Response) => {
   try {
     const id = req.params;
-    const findUser: any = await user.findOne({ _id: id.id }, { password: 0 });
+    const findUser: any = await user.findOne(
+      { _id: new mongoose.Types.ObjectId(id.id) },
+      { password: 0 }
+    );
     return res
       .status(StatusCodes.OK)
       .json({ data: findUser, message: "Data fetched successfully" });
