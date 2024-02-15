@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema(
     address: { type: String },
     state: String,
     country: String,
-    city: String,
+    // city: String,
     pincode: { type: String, trim: true },
     password: { type: String, trim: true },
     position: { type: String, trim: true, lowercase: true },

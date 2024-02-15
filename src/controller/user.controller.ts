@@ -42,7 +42,7 @@ const generateActivationKey = async (req: Request, res: Response) => {
         address: null,
         state: null,
         country: null,
-        city: null,
+        // city: null,
         pincode: null,
         isLeaveAllocated: false,
         education: [
@@ -150,7 +150,7 @@ const userUpdate = async (req: Request, res: Response) => {
         address: reqData.address,
         state: reqData.state,
         country: reqData.country,
-        city: reqData.city,
+        // city: reqData.city,
         pincode: reqData.pincode,
         education: reqData.education,
         workDetail: reqData.workDetail,
