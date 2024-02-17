@@ -486,7 +486,14 @@ const userDailyCheck = async (req: Request, res: Response) => {
     } else {
       return res.status(StatusCodes.OK).json({
         message: "Data fetched successfully",
-        data: { startDisabled: false, endDisabled: true },
+        data: {
+          startDisabled: false,
+          endDisabled: true,
+          startTime: null,
+          endTime: null,
+          totalTime: null,
+          date: moment(reqData.checkDate).format("YYYY-MM-DD"),
+        },
       });
     }
   } catch (error: any) {
