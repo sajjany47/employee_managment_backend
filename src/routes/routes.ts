@@ -13,6 +13,7 @@ import {
 } from "../controller/user.controller";
 import { auth } from "../middleware/auth.middleware";
 import {
+  inValidAttendanceChange,
   multiUserLeaveAdd,
   userAttendanceDetails,
   userDailyCheck,
@@ -64,7 +65,8 @@ routes.route("/date-check").post(auth, userDailyCheck);
 routes.route("/user-attendance/details").post(auth, userAttendanceDetails);
 routes
   .route("/user-invalid-attendance/details")
-  .post(auth, userInvalidAttendance);
+  .get(auth, userInvalidAttendance);
+routes.route("/invalid-attendance/change").post(auth, inValidAttendanceChange);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 
 routes.route("/user-datatable").post(auth, userDatatTable);

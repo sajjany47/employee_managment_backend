@@ -572,6 +572,31 @@ const userInvalidAttendance = async (req: Request, res: Response) => {
   }
 };
 
+const inValidAttendanceChange = async (req: Request, res: Response) => {
+  try {
+    const reqData = Object.assign({}, req.body);
+    const updateData = await timeRecord.findOneAndUpdate(
+      {
+        "timeSchedule._id": new mongoose.Types.ObjectId(reqData.id),
+      },
+      {
+        $set: {
+          "timeSchedule.$.startTime": moment(reqData.startTime).format(),
+          "timeSchedule.$.endTime": moment(reqData.endTime).format(),
+          "timeSchedule.$.totalTime": reqData.totalTime,
+          "timeSchedule.$.updatedBy": reqData.updatedBy,
+        },
+      }
+    );
+
+    return res
+      .status(StatusCodes.OK)
+      .json({ message: "Attendance updated successfully", data: updateData });
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 export {
   timeData,
   leaveApply,
@@ -581,4 +606,5 @@ export {
   userDailyCheck,
   userAttendanceDetails,
   userInvalidAttendance,
+  inValidAttendanceChange,
 };
