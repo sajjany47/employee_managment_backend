@@ -16,6 +16,7 @@ import {
   multiUserLeaveAdd,
   userAttendanceDetails,
   userDailyCheck,
+  userInvalidAttendance,
   userTimeData,
 } from "../controller/timeData.controller";
 import { employeeList } from "../controller/employee.controller";
@@ -61,6 +62,9 @@ routes.route("/leave-alloted/edit").post(auth, editLeaveAlloctated);
 routes.route("/time-record").post(auth, userTimeData);
 routes.route("/date-check").post(auth, userDailyCheck);
 routes.route("/user-attendance/details").post(auth, userAttendanceDetails);
+routes
+  .route("/user-invalid-attendance/details")
+  .post(auth, userInvalidAttendance);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 
 routes.route("/user-datatable").post(auth, userDatatTable);

@@ -547,6 +547,31 @@ const userAttendanceDetails = async (req: Request, res: Response) => {
   }
 };
 
+const userInvalidAttendance = async (req: Request, res: Response) => {
+  try {
+    const inValidAttendance = await timeRecord.aggregate([
+      {
+        $unwind: {
+          path: "$timeSchedule",
+        },
+      },
+      {
+        $match: {
+          "timeSchedule.startTime": { $ne: null },
+          "timeSchedule.endTime": null,
+          "timeSchedule.date": { $ne: moment(new Date()).format() },
+        },
+      },
+    ]);
+
+    return res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: inValidAttendance });
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 export {
   timeData,
   leaveApply,
@@ -555,4 +580,5 @@ export {
   userTimeData,
   userDailyCheck,
   userAttendanceDetails,
+  userInvalidAttendance,
 };
