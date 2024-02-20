@@ -22,6 +22,7 @@ const timeData = new mongoose.Schema(
         endDisabled: Boolean,
         startTime: String,
         endTime: String,
+        updatedBy: String,
       },
     ],
   },

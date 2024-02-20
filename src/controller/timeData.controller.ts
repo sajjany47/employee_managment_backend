@@ -416,6 +416,7 @@ const userTimeData = async (req: Request, res: Response) => {
                           totalTime: null,
                           startTime: moment(reqData.startTime).format(),
                           endTime: null,
+                          updatedBy: null,
                         },
                       },
                     }
@@ -436,6 +437,7 @@ const userTimeData = async (req: Request, res: Response) => {
                       endTime: null,
                       startDisabled: true,
                       endDisabled: false,
+                      updatedBy: null,
                     },
                   ],
                 });
@@ -495,8 +497,50 @@ const userDailyCheck = async (req: Request, res: Response) => {
           endTime: null,
           totalTime: null,
           date: moment(reqData.checkDate).format("YYYY-MM-DD"),
+          updatedBy: null,
         },
       });
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+const userAttendanceDetails = async (req: Request, res: Response) => {
+  try {
+    const reqData = Object.assign({}, req.body);
+    const userData = await timeRecord.aggregate([
+      {
+        $match: {
+          username: reqData.username,
+        },
+      },
+      {
+        $unwind: {
+          path: "$timeSchedule",
+        },
+      },
+      {
+        $sort: {
+          "timeSchedule.date": 1,
+        },
+      },
+    ]);
+
+    if (userData) {
+      const filterData = userData.filter(
+        (item: any) =>
+          moment(item.timeSchedule.date).format("MM-YYYY") ===
+          moment(reqData.date).format("MM-YYYY")
+      );
+
+      return res
+        .status(StatusCodes.OK)
+        .json({ message: "Data fetched successfully", data: filterData });
+    } else {
+      return res
+        .status(StatusCodes.OK)
+        .json({ message: "Data fetched successfully", data: [] });
     }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
@@ -510,4 +554,5 @@ export {
   multiUserLeaveAdd,
   userTimeData,
   userDailyCheck,
+  userAttendanceDetails,
 };
