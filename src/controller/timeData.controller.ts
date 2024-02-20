@@ -559,7 +559,7 @@ const userInvalidAttendance = async (req: Request, res: Response) => {
         $match: {
           "timeSchedule.startTime": { $ne: null },
           "timeSchedule.endTime": null,
-          "timeSchedule.date": { $ne: moment(new Date()).format() },
+          "timeSchedule.date": { $ne: moment(new Date()).format("YYYY-MM-DD") },
         },
       },
     ]);
