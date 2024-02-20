@@ -385,7 +385,9 @@ const userTimeData = async (req: Request, res: Response) => {
                       },
                       {
                         $set: {
-                          "timeSchedule.$.endTime": new Date(reqData.endTime),
+                          "timeSchedule.$.endTime": moment(
+                            reqData.endTime
+                          ).format(),
                           "timeSchedule.$.totalTime": reqData.totalTime,
                           "timeSchedule.$.startDisabled": true,
                           "timeSchedule.$.endDisabled": true,
@@ -412,7 +414,7 @@ const userTimeData = async (req: Request, res: Response) => {
                           startDisabled: true,
                           endDisabled: false,
                           totalTime: null,
-                          startTime: new Date(reqData.startTime),
+                          startTime: moment(reqData.startTime).format(),
                           endTime: null,
                         },
                       },
@@ -430,7 +432,7 @@ const userTimeData = async (req: Request, res: Response) => {
                     {
                       date: moment(reqData.date).format("YYYY-MM-DD"),
                       totalTime: null,
-                      startTime: new Date(reqData.startTime),
+                      startTime: moment(reqData.startTime).format(),
                       endTime: null,
                       startDisabled: true,
                       endDisabled: false,
