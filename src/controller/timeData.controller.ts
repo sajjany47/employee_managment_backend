@@ -522,7 +522,7 @@ const userAttendanceDetails = async (req: Request, res: Response) => {
       },
       {
         $sort: {
-          "timeSchedule.date": 1,
+          "timeSchedule.date": -1,
         },
       },
     ]);
@@ -531,7 +531,9 @@ const userAttendanceDetails = async (req: Request, res: Response) => {
       const filterData = userData.filter(
         (item: any) =>
           moment(item.timeSchedule.date).format("MM-YYYY") ===
-          moment(reqData.date).format("MM-YYYY")
+            moment(reqData.date).format("MM-YYYY") &&
+          moment(item.timeSchedule.date).format("YYYY-MM-DD") !==
+            moment(new Date()).format("YYYY-MM-DD")
       );
 
       return res
