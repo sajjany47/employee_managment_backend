@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import timeRecord from "../model/timeData.model";
 import moment from "moment";
+import { getWeekendDates } from "../utility/utility";
 
 const payrollList = async (req: Request, res: Response) => {
   try {
@@ -106,6 +107,43 @@ const payrollList = async (req: Request, res: Response) => {
         },
       },
     ]);
+
+    const currentMonthPayroll: any = [];
+    findMonth.forEach((item: any) => {
+      const filterLeave = item.leave.leaveDetail.leaveUseDetail.filter(
+        (lea: any) => lea.leaveStatus === "approved"
+      );
+
+      const convertLeaveLeft = Number(item.leave.leaveDetail.totalLeaveLeft);
+
+      let totalLeave: any = [];
+      filterLeave.length > 0 &&
+        filterLeave.forEach((element: any) => {
+          totalLeave.push(...getWeekendDates(element.startDay, element.endDay));
+        });
+      let currentLeaveList = [];
+      if (convertLeaveLeft >= 0) {
+        const currentMonthLeave = totalLeave.filter(
+          (a: any) =>
+            moment(a).format("YYYY-MM") === moment(new Date()).format("YYYY-MM")
+        );
+        currentLeaveList.push(...currentMonthLeave);
+      } else {
+        const sortDate = totalLeave.sort();
+      }
+
+      const filterHoliday = item.holiday.holidayList.filter(
+        (res: any) =>
+          moment(res.holidayDate).format("YYYY-MM") ===
+          moment(new Date()).format("YYYY-MM")
+      );
+      currentMonthPayroll.push({
+        username: item._id,
+        currentMonthTotalLeave: totalLeave,
+        currentMonthTotalHoliday: filterHoliday,
+      });
+    });
+    res.status(StatusCodes.OK).json({ data: currentMonthPayroll });
   } catch (error: any) {
     res.status(StatusCodes.OK).json({ message: error.message });
   }
