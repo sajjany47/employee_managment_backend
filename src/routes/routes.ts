@@ -71,7 +71,7 @@ routes
   .get(auth, userInvalidAttendance);
 routes.route("/invalid-attendance/change").post(auth, inValidAttendanceChange);
 routes.route("/user-salary/structure").post(auth, userSalaryCreate);
-routes.route("/payroll").post(auth, generatePayroll);
+routes.route("/payroll/generate").post(auth, generatePayroll);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 routes.route("/user-datatable").post(auth, userDatatTable);
 

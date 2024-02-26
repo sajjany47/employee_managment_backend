@@ -209,34 +209,78 @@ const generatePayroll = async (req: Request, res: Response) => {
             (item?.salary.currentSalary.travelAllowance /
               currentMontTotalDays) *
               totalAbsent;
+          const MedicalAllowance =
+            item?.salary.currentSalary.MedicalAllowance -
+            (item?.salary.currentSalary.MedicalAllowance /
+              currentMontTotalDays) *
+              totalAbsent;
+          const LeaveTravelAllowance =
+            item?.salary.currentSalary.LeaveTravelAllowance -
+            (item?.salary.currentSalary.LeaveTravelAllowance /
+              currentMontTotalDays) *
+              totalAbsent;
+          const SpecialAllowance =
+            item?.salary.currentSalary.SpecialAllowance -
+            (item?.salary.currentSalary.SpecialAllowance /
+              currentMontTotalDays) *
+              totalAbsent;
+          const otherDeduction =
+            item?.salary.currentSalary.providentFund -
+            (item?.salary.currentSalary.providentFund / currentMontTotalDays) *
+              totalAbsent +
+            (item?.salary.currentSalary.professionalTax -
+              (item?.salary.currentSalary.professionalTax /
+                currentMontTotalDays) *
+                totalAbsent) +
+            (item?.salary.currentSalary.incomeTax -
+              (item?.salary.currentSalary.incomeTax / currentMontTotalDays) *
+                totalAbsent);
 
           /////////////////////////////////////////////////////////////////////////////////////////////////
           userSalary.basicSalary = basicSalary;
           userSalary.hra = hra;
           userSalary.travelAllowance = travelAllowance;
-          (userSalary.MedicalAllowance =
-            item?.salary.currentSalary.MedicalAllowance),
-            (userSalary.LeaveTravelAllowance =
-              item?.salary.currentSalary.LeaveTravelAllowance),
-            (userSalary.SpecialAllowance =
-              item?.salary.currentSalary.SpecialAllowance),
-            (userSalary.providentFund =
-              item?.salary.currentSalary.providentFund),
+          userSalary.MedicalAllowance = MedicalAllowance;
+          userSalary.LeaveTravelAllowance = LeaveTravelAllowance;
+          userSalary.SpecialAllowance = SpecialAllowance;
+
+          (userSalary.providentFund = item?.salary.currentSalary.providentFund),
             (userSalary.professionalTax =
               item?.salary.currentSalary.professionalTax),
             (userSalary.incomeTax = item?.salary.currentSalary.incomeTax);
+          userSalary.totalEarning =
+            basicSalary +
+            hra +
+            travelAllowance +
+            MedicalAllowance +
+            LeaveTravelAllowance +
+            SpecialAllowance -
+            (item?.salary.currentSalary.providentFund +
+              item?.salary.currentSalary.professionalTax +
+              item?.salary.currentSalary.incomeTax) -
+            otherDeduction;
+          userSalary.otherDeduction = otherDeduction;
         }
 
         currentMonthPayroll.push({
           username: item._id,
+          date: moment(new Date()).format("YYYY-MM"),
           currentMonthTotalLeave: totalLeave.length,
           absent: totalAbsent,
           currentMonthTotalHoliday: filterHoliday.length,
-          totalDays: currentMontTotalDays,
+          totalMonthDays: currentMontTotalDays,
           totalWeekend: currentMontTotalDays - totalWeekHoliday.length,
+          salaryStatus: "pending",
+          transactionNumber: null,
+          transactionDate: null,
+          accountNumber: null,
+          currentMonthSalary: userSalary,
         });
       });
-      return res.status(StatusCodes.OK).json({ data: currentMonthPayroll });
+      return res.status(StatusCodes.OK).json({
+        message: "Data fetched successfully",
+        data: currentMonthPayroll,
+      });
     }
   } catch (error: any) {
     res.status(StatusCodes.OK).json({ message: error.message });
