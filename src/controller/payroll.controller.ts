@@ -115,6 +115,7 @@ const payrollList = async (req: Request, res: Response) => {
       );
 
       const convertLeaveLeft = Number(item.leave.leaveDetail.totalLeaveLeft);
+      const convertTotalLeave = Number(item.leave.leaveDetail.totalLeave);
 
       let totalLeave: any = [];
       filterLeave.length > 0 &&
@@ -122,14 +123,25 @@ const payrollList = async (req: Request, res: Response) => {
           totalLeave.push(...getWeekendDates(element.startDay, element.endDay));
         });
       let currentLeaveList = [];
+      let totalAbsent = 0;
       if (convertLeaveLeft >= 0) {
         const currentMonthLeave = totalLeave.filter(
           (a: any) =>
             moment(a).format("YYYY-MM") === moment(new Date()).format("YYYY-MM")
         );
         currentLeaveList.push(...currentMonthLeave);
+        totalAbsent = 0;
       } else {
-        const sortDate = totalLeave.sort();
+        const currentMonthLeave = totalLeave.filter(
+          (a: any) =>
+            moment(a).format("YYYY-MM") === moment(new Date()).format("YYYY-MM")
+        );
+        const accessLeaveUse =
+          convertTotalLeave - convertLeaveLeft - convertTotalLeave;
+        const absent = currentMonthLeave.length - accessLeaveUse;
+        if (absent <= 0) {
+          totalAbsent = currentMonthLeave.length;
+        }
       }
 
       const filterHoliday = item.holiday.holidayList.filter(
@@ -137,10 +149,19 @@ const payrollList = async (req: Request, res: Response) => {
           moment(res.holidayDate).format("YYYY-MM") ===
           moment(new Date()).format("YYYY-MM")
       );
+      const currentMontTotalDays = moment(new Date()).daysInMonth();
+      const monthYear = moment(new Date()).format("YYYY-MM");
+      const totalWeekHoliday: any = getWeekendDates(
+        moment(`${monthYear}-01`, "YYYY-MM-DD"),
+        moment(`${monthYear}-${currentMontTotalDays}`, "YYYY-MM-DD")
+      );
       currentMonthPayroll.push({
         username: item._id,
-        currentMonthTotalLeave: totalLeave,
-        currentMonthTotalHoliday: filterHoliday,
+        currentMonthTotalLeave: totalLeave.length,
+        absent: totalAbsent,
+        currentMonthTotalHoliday: filterHoliday.length,
+        totalDays: currentMontTotalDays,
+        totalWeekend: currentMontTotalDays - totalWeekHoliday.length,
       });
     });
     res.status(StatusCodes.OK).json({ data: currentMonthPayroll });
