@@ -4,6 +4,7 @@ import timeRecord from "../model/timeData.model";
 import moment from "moment";
 import { getWeekendDates } from "../utility/utility";
 import payroll from "../model/payroll.model";
+import mongoose from "mongoose";
 
 const generatePayroll = async (req: Request, res: Response) => {
   try {
@@ -287,4 +288,33 @@ const generatePayroll = async (req: Request, res: Response) => {
   }
 };
 
-export { generatePayroll };
+const payrollUpdate = async (req: Request, res: Response) => {
+  try {
+    const reqData = Object.assign({}, req.body);
+    const updateUserPayroll = await payroll.findOneAndUpdate(
+      {
+        date: moment(reqData.date).format("YYYY-MM"),
+        "userPayroll._id": new mongoose.Types.ObjectId(reqData.payrollId),
+      },
+      {
+        $set: {
+          "userPayroll.$.salaryStatus": reqData.status,
+          "userPayroll.$.transactionNumber": reqData.transactionNumber,
+          "userPayroll.$.transactionDate": reqData.transactionDate,
+          "userPayroll.$.accountNumber": reqData.accountNumber,
+          "userPayroll.$.updatedBy": reqData.updatedBy,
+          "userPayroll.$.updatedAt": reqData.updatedAt,
+        },
+      }
+    );
+
+    res.status(StatusCodes.OK).json({
+      message: "Payroll updated successfully",
+      data: updateUserPayroll,
+    });
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+export { generatePayroll, payrollUpdate };

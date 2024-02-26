@@ -22,6 +22,8 @@ const userPayroll = new mongoose.Schema(
         transactionDate: Date,
         accountNumber: String,
         currentMonthSalary: Object,
+        updatedBy: String,
+        updatedAt: String,
       },
     ],
   },

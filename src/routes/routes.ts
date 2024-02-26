@@ -39,7 +39,10 @@ import {
 } from "../controller/leave.controller";
 
 import { userSalaryCreate } from "../controller/salary.controller";
-import { generatePayroll } from "../controller/payroll.controller";
+import {
+  generatePayroll,
+  payrollUpdate,
+} from "../controller/payroll.controller";
 
 const routes = express.Router();
 routes.route("/sigin").post(login);
@@ -72,6 +75,7 @@ routes
 routes.route("/invalid-attendance/change").post(auth, inValidAttendanceChange);
 routes.route("/user-salary/structure").post(auth, userSalaryCreate);
 routes.route("/payroll/generate").post(auth, generatePayroll);
+routes.route("/payroll/update").post(auth, payrollUpdate);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 routes.route("/user-datatable").post(auth, userDatatTable);
 
