@@ -41,7 +41,9 @@ import {
 import { userSalaryCreate } from "../controller/salary.controller";
 import {
   generatePayroll,
+  payrollListMonthWise,
   payrollUpdate,
+  singleUserPayrollList,
 } from "../controller/payroll.controller";
 
 const routes = express.Router();
@@ -76,6 +78,8 @@ routes.route("/invalid-attendance/change").post(auth, inValidAttendanceChange);
 routes.route("/user-salary/structure").post(auth, userSalaryCreate);
 routes.route("/payroll/generate").post(auth, generatePayroll);
 routes.route("/payroll/update").post(auth, payrollUpdate);
+routes.route("/payroll/month/list").post(auth, payrollListMonthWise);
+routes.route("/payroll/user/list").post(auth, singleUserPayrollList);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 routes.route("/user-datatable").post(auth, userDatatTable);
 

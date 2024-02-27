@@ -6,7 +6,7 @@ const userPayroll = new mongoose.Schema(
     userPayroll: [
       {
         username: String,
-        date: String,
+        date: Date,
         currentMonthTotalLeave: Number,
         absent: Number,
         currentMonthTotalHoliday: Number,
@@ -23,7 +23,7 @@ const userPayroll = new mongoose.Schema(
         accountNumber: String,
         currentMonthSalary: Object,
         updatedBy: String,
-        updatedAt: String,
+        updatedAt: Date,
       },
     ],
   },

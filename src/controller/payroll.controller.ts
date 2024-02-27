@@ -275,7 +275,7 @@ const generatePayroll = async (req: Request, res: Response) => {
 
           currentMonthPayroll.push({
             username: item._id,
-            date: moment(new Date()).format("YYYY-MM"),
+            date: moment(new Date()).format(),
             currentMonthTotalLeave: totalLeave.length,
             absent: totalAbsent,
             currentMonthTotalHoliday: filterHoliday.length,
@@ -288,9 +288,16 @@ const generatePayroll = async (req: Request, res: Response) => {
             currentMonthSalary: userSalary,
           });
         });
+
+        const monthPayrollAdd = new payroll({
+          date: currentMonthYear,
+          userPayroll: currentMonthPayroll,
+        });
+
+        const saveMonthPayroll = await monthPayrollAdd.save();
         return res.status(StatusCodes.OK).json({
           message: "Data fetched successfully",
-          data: currentMonthPayroll,
+          data: saveMonthPayroll,
         });
       }
     }
@@ -314,7 +321,7 @@ const payrollUpdate = async (req: Request, res: Response) => {
           "userPayroll.$.transactionDate": reqData.transactionDate,
           "userPayroll.$.accountNumber": reqData.accountNumber,
           "userPayroll.$.updatedBy": reqData.updatedBy,
-          "userPayroll.$.updatedAt": reqData.updatedAt,
+          "userPayroll.$.updatedAt": moment(reqData.updatedAt).format(),
         },
       }
     );
@@ -328,4 +335,70 @@ const payrollUpdate = async (req: Request, res: Response) => {
   }
 };
 
-export { generatePayroll, payrollUpdate };
+const payrollListMonthWise = async (req: Request, res: Response) => {
+  try {
+    const reqData = Object.assign({}, req.body);
+    const monthPayrollList = await payroll.aggregate([
+      {
+        $match: {
+          date: moment(reqData.date).format("YYYY-MM"),
+        },
+      },
+      {
+        $unwind: {
+          path: "$userPayroll",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $sort: { "userPayroll.salaryStatus": -1 },
+      },
+    ]);
+
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: monthPayrollList });
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+const singleUserPayrollList = async (req: Request, res: Response) => {
+  try {
+    const reqData = Object.assign({}, req.body);
+    const userPayroll = await payroll.aggregate([
+      {
+        $match: {
+          date: moment(reqData.date).format("YYYY-MM"),
+        },
+      },
+      {
+        $unwind: {
+          path: "$userPayroll",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          username: reqData.username,
+        },
+      },
+      {
+        $sort: { "userPayroll.salaryStatus": -1 },
+      },
+    ]);
+
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: userPayroll });
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+export {
+  generatePayroll,
+  payrollUpdate,
+  payrollListMonthWise,
+  singleUserPayrollList,
+};
