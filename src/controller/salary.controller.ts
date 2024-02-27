@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import salary from "../model/salary.model";
+import user from "../model/user.model";
 
 const userSalaryCreate = async (req: Request, res: Response) => {
   try {
@@ -98,6 +99,14 @@ const userSalaryCreate = async (req: Request, res: Response) => {
     }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+const salaryList = async (req: Request, res: Response) => {
+  try {
+    const userList = await user.find({ activeStatus: true });
+  } catch (error: any) {
+    res.status(StatusCodes.OK).json({ message: error.message });
   }
 };
 
