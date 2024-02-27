@@ -102,12 +102,35 @@ const userSalaryCreate = async (req: Request, res: Response) => {
   }
 };
 
-const salaryList = async (req: Request, res: Response) => {
+const salaryUserAlloted = async (req: Request, res: Response) => {
   try {
     const userList = await user.find({ activeStatus: true });
+    const allotedSalaryList = await salary.find({});
+
+    const removeDuplicateUser = userList.filter(
+      (item1) =>
+        !allotedSalaryList.some((item2) => item1.username === item2.username)
+    );
+    res.status(StatusCodes.OK).json({
+      message: "Data fetched successfully",
+      data: removeDuplicateUser,
+    });
   } catch (error: any) {
     res.status(StatusCodes.OK).json({ message: error.message });
   }
 };
 
-export { userSalaryCreate };
+const salaryList = async (req: Request, res: Response) => {
+  try {
+    const allotedSalaryList = await salary.find({});
+
+    res.status(StatusCodes.OK).json({
+      message: "Data fetched successfully",
+      data: allotedSalaryList,
+    });
+  } catch (error: any) {
+    res.status(StatusCodes.OK).json({ message: error.message });
+  }
+};
+
+export { userSalaryCreate, salaryList, salaryUserAlloted };

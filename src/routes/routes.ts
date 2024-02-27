@@ -38,7 +38,11 @@ import {
   userApplyLeaveList,
 } from "../controller/leave.controller";
 
-import { userSalaryCreate } from "../controller/salary.controller";
+import {
+  salaryList,
+  salaryUserAlloted,
+  userSalaryCreate,
+} from "../controller/salary.controller";
 import {
   generatePayroll,
   payrollListMonthWise,
@@ -76,6 +80,8 @@ routes
   .get(auth, userInvalidAttendance);
 routes.route("/invalid-attendance/change").post(auth, inValidAttendanceChange);
 routes.route("/user-salary/structure").post(auth, userSalaryCreate);
+routes.route("/user-salary/create").get(auth, salaryUserAlloted);
+routes.route("/user-salary/list").get(auth, salaryList);
 routes.route("/payroll/generate").post(auth, generatePayroll);
 routes.route("/payroll/update").post(auth, payrollUpdate);
 routes.route("/payroll/month/list").post(auth, payrollListMonthWise);
