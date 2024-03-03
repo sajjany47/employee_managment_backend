@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import salary from "../model/salary.model";
 import user from "../model/user.model";
 import mongoose from "mongoose";
+import moment from "moment";
 
 const userSalaryCreate = async (req: Request, res: Response) => {
   try {
@@ -73,7 +74,7 @@ const userSalaryCreate = async (req: Request, res: Response) => {
                 incrementValue: reqData.incrementValue,
                 totalEarning: reqData.totalEarning,
                 updatedBy: reqData.updatedBy,
-                date: reqData.date,
+                date: moment(new Date(reqData.date)).format(),
               },
             },
             $push: {
@@ -91,7 +92,7 @@ const userSalaryCreate = async (req: Request, res: Response) => {
                 incrementValue: reqData.incrementValue,
                 totalEarning: reqData.totalEarning,
                 updatedBy: reqData.updatedBy,
-                date: reqData.date,
+                date: moment(new Date(reqData.date)).format(),
               },
             },
           }
@@ -103,6 +104,7 @@ const userSalaryCreate = async (req: Request, res: Response) => {
       }
     } else {
       const userSalary = new salary({
+        username: reqData.username,
         currentSalary: {
           basicSalary: reqData.basicSalary,
           hra: reqData.hra,
@@ -117,7 +119,7 @@ const userSalaryCreate = async (req: Request, res: Response) => {
           incrementValue: null,
           totalEarning: reqData.totalEarning,
           updatedBy: reqData.updatedBy,
-          date: reqData.date,
+          date: moment(new Date(reqData.date)).format(),
         },
         salaryHistory: [
           {
@@ -134,7 +136,7 @@ const userSalaryCreate = async (req: Request, res: Response) => {
             incrementValue: reqData.incrementValue,
             totalEarning: reqData.totalEarning,
             updatedBy: reqData.updatedBy,
-            date: reqData.date,
+            date: moment(new Date(reqData.date)).format(),
           },
         ],
       });
@@ -152,7 +154,10 @@ const userSalaryCreate = async (req: Request, res: Response) => {
 
 const salaryUserAlloted = async (req: Request, res: Response) => {
   try {
-    const userList = await user.find({ activeStatus: true });
+    const userList = await user.find(
+      { activeStatus: true },
+      { username: 1, name: 1, _id: 0 }
+    );
     const allotedSalaryList = await salary.find({});
 
     const removeDuplicateUser = userList.filter(
