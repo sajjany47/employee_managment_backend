@@ -33,6 +33,7 @@ const userSalaryCreate = async (req: Request, res: Response) => {
                 totalEarning: reqData.totalEarning,
                 updatedBy: reqData.updatedBy,
                 date: reqData.date,
+                healthInsurance: reqData.healthInsurance,
               },
 
               "salaryHistory.$.hra": reqData.hra,
@@ -48,6 +49,7 @@ const userSalaryCreate = async (req: Request, res: Response) => {
               "salaryHistory.$.totalEarning": reqData.totalEarning,
               "salaryHistory.$.updatedBy": reqData.updatedBy,
               "salaryHistory.$.date": reqData.date,
+              "salaryHistory.$.healthInsurance": reqData.healthInsurance,
             },
           }
         );
@@ -75,6 +77,7 @@ const userSalaryCreate = async (req: Request, res: Response) => {
                 totalEarning: reqData.totalEarning,
                 updatedBy: reqData.updatedBy,
                 date: moment(new Date(reqData.date)).format(),
+                healthInsurance: reqData.healthInsurance,
               },
             },
             $push: {
@@ -93,6 +96,7 @@ const userSalaryCreate = async (req: Request, res: Response) => {
                 totalEarning: reqData.totalEarning,
                 updatedBy: reqData.updatedBy,
                 date: moment(new Date(reqData.date)).format(),
+                healthInsurance: reqData.healthInsurance,
               },
             },
           }
@@ -120,6 +124,7 @@ const userSalaryCreate = async (req: Request, res: Response) => {
           totalEarning: reqData.totalEarning,
           updatedBy: reqData.updatedBy,
           date: moment(new Date(reqData.date)).format(),
+          healthInsurance: reqData.healthInsurance,
         },
         salaryHistory: [
           {
@@ -137,6 +142,7 @@ const userSalaryCreate = async (req: Request, res: Response) => {
             totalEarning: reqData.totalEarning,
             updatedBy: reqData.updatedBy,
             date: moment(new Date(reqData.date)).format(),
+            healthInsurance: reqData.healthInsurance,
           },
         ],
       });

@@ -23,6 +23,7 @@ const userSalary = new mongoose.Schema(
       totalEarning: Number,
       updatedBy: String,
       date: Date,
+      healthInsurance: Number,
     },
     salaryHistory: [
       {
@@ -45,6 +46,7 @@ const userSalary = new mongoose.Schema(
         totalEarning: Number,
         updatedBy: String,
         date: Date,
+        healthInsurance: Number,
       },
     ],
   },
