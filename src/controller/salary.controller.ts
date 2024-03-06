@@ -8,6 +8,23 @@ import moment from "moment";
 const userSalaryCreate = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
+    const requestBody = {
+      basicSalary: reqData.basicSalary,
+      hra: reqData.hra,
+      travelAllowance: reqData.travelAllowance,
+      MedicalAllowance: reqData.MedicalAllowance,
+      LeaveTravelAllowance: reqData.LeaveTravelAllowance,
+      SpecialAllowance: reqData.SpecialAllowance,
+      providentFund: reqData.providentFund,
+      professionalTax: reqData.professionalTax,
+      incomeTax: reqData.incomeTax,
+      incrementType: reqData.incrementType,
+      incrementValue: reqData.incrementValue,
+      totalEarning: reqData.totalEarning,
+      updatedBy: reqData.updatedBy,
+      date: moment(new Date(reqData.date)).format(),
+      healthInsurance: reqData.healthInsurance,
+    };
     const findUser = await salary.findOne({ username: reqData.username });
     if (findUser) {
       if (reqData.type === "changes") {
@@ -18,24 +35,7 @@ const userSalaryCreate = async (req: Request, res: Response) => {
           },
           {
             $set: {
-              currentSalary: {
-                basicSalary: reqData.basicSalary,
-                hra: reqData.hra,
-                travelAllowance: reqData.travelAllowance,
-                MedicalAllowance: reqData.MedicalAllowance,
-                LeaveTravelAllowance: reqData.LeaveTravelAllowance,
-                SpecialAllowance: reqData.SpecialAllowance,
-                providentFund: reqData.providentFund,
-                professionalTax: reqData.professionalTax,
-                incomeTax: reqData.incomeTax,
-                incrementType: reqData.incrementType,
-                incrementValue: reqData.incrementValue,
-                totalEarning: reqData.totalEarning,
-                updatedBy: reqData.updatedBy,
-                date: reqData.date,
-                healthInsurance: reqData.healthInsurance,
-              },
-
+              currentSalary: requestBody,
               "salaryHistory.$.hra": reqData.hra,
               "salaryHistory.$.basicSalary": reqData.basicSalary,
               "salaryHistory.$.travelAllowance": reqData.travelAllowance,
@@ -62,42 +62,10 @@ const userSalaryCreate = async (req: Request, res: Response) => {
           { username: reqData.username },
           {
             $set: {
-              currentSalary: {
-                basicSalary: reqData.basicSalary,
-                hra: reqData.hra,
-                travelAllowance: reqData.travelAllowance,
-                MedicalAllowance: reqData.MedicalAllowance,
-                LeaveTravelAllowance: reqData.LeaveTravelAllowance,
-                SpecialAllowance: reqData.SpecialAllowance,
-                providentFund: reqData.providentFund,
-                professionalTax: reqData.professionalTax,
-                incomeTax: reqData.incomeTax,
-                incrementType: reqData.incrementType,
-                incrementValue: reqData.incrementValue,
-                totalEarning: reqData.totalEarning,
-                updatedBy: reqData.updatedBy,
-                date: moment(new Date(reqData.date)).format(),
-                healthInsurance: reqData.healthInsurance,
-              },
+              currentSalary: requestBody,
             },
             $push: {
-              salaryHistory: {
-                basicSalary: reqData.basicSalary,
-                hra: reqData.hra,
-                travelAllowance: reqData.travelAllowance,
-                MedicalAllowance: reqData.MedicalAllowance,
-                LeaveTravelAllowance: reqData.LeaveTravelAllowance,
-                SpecialAllowance: reqData.SpecialAllowance,
-                providentFund: reqData.providentFund,
-                professionalTax: reqData.professionalTax,
-                incomeTax: reqData.incomeTax,
-                incrementType: reqData.incrementType,
-                incrementValue: reqData.incrementValue,
-                totalEarning: reqData.totalEarning,
-                updatedBy: reqData.updatedBy,
-                date: moment(new Date(reqData.date)).format(),
-                healthInsurance: reqData.healthInsurance,
-              },
+              salaryHistory: requestBody,
             },
           }
         );
@@ -109,42 +77,8 @@ const userSalaryCreate = async (req: Request, res: Response) => {
     } else {
       const userSalary = new salary({
         username: reqData.username,
-        currentSalary: {
-          basicSalary: reqData.basicSalary,
-          hra: reqData.hra,
-          travelAllowance: reqData.travelAllowance,
-          MedicalAllowance: reqData.MedicalAllowance,
-          LeaveTravelAllowance: reqData.LeaveTravelAllowance,
-          SpecialAllowance: reqData.SpecialAllowance,
-          providentFund: reqData.providentFund,
-          professionalTax: reqData.professionalTax,
-          incomeTax: reqData.incomeTax,
-          incrementType: null,
-          incrementValue: null,
-          totalEarning: reqData.totalEarning,
-          updatedBy: reqData.updatedBy,
-          date: moment(new Date(reqData.date)).format(),
-          healthInsurance: reqData.healthInsurance,
-        },
-        salaryHistory: [
-          {
-            basicSalary: reqData.basicSalary,
-            hra: reqData.hra,
-            travelAllowance: reqData.travelAllowance,
-            MedicalAllowance: reqData.MedicalAllowance,
-            LeaveTravelAllowance: reqData.LeaveTravelAllowance,
-            SpecialAllowance: reqData.SpecialAllowance,
-            providentFund: reqData.providentFund,
-            professionalTax: reqData.professionalTax,
-            incomeTax: reqData.incomeTax,
-            incrementType: reqData.incrementType,
-            incrementValue: reqData.incrementValue,
-            totalEarning: reqData.totalEarning,
-            updatedBy: reqData.updatedBy,
-            date: moment(new Date(reqData.date)).format(),
-            healthInsurance: reqData.healthInsurance,
-          },
-        ],
+        currentSalary: requestBody,
+        salaryHistory: [requestBody],
       });
 
       await userSalary.save();
