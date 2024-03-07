@@ -21,6 +21,7 @@ const userSalary = new mongoose.Schema(
       },
       incrementValue: String,
       totalEarning: Number,
+      ctc: Number,
       updatedBy: String,
       date: Date,
       healthInsurance: Number,

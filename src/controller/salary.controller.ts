@@ -9,21 +9,22 @@ const userSalaryCreate = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
     const requestBody = {
-      basicSalary: reqData.basicSalary,
-      hra: reqData.hra,
-      travelAllowance: reqData.travelAllowance,
-      MedicalAllowance: reqData.MedicalAllowance,
-      LeaveTravelAllowance: reqData.LeaveTravelAllowance,
-      SpecialAllowance: reqData.SpecialAllowance,
-      providentFund: reqData.providentFund,
-      professionalTax: reqData.professionalTax,
-      incomeTax: reqData.incomeTax,
+      basicSalary: Number(reqData.basicSalary),
+      hra: Number(reqData.hra),
+      travelAllowance: Number(reqData.travelAllowance),
+      MedicalAllowance: Number(reqData.MedicalAllowance),
+      LeaveTravelAllowance: Number(reqData.LeaveTravelAllowance),
+      SpecialAllowance: Number(reqData.SpecialAllowance),
+      providentFund: Number(reqData.providentFund),
+      professionalTax: Number(reqData.professionalTax),
+      incomeTax: Number(reqData.incomeTax),
       incrementType: reqData.incrementType,
-      incrementValue: reqData.incrementValue,
-      totalEarning: reqData.totalEarning,
+      incrementValue: Number(reqData.incrementValue),
+      totalEarning: Number(reqData.totalEarning),
       updatedBy: reqData.updatedBy,
       date: moment(new Date(reqData.date)).format(),
-      healthInsurance: reqData.healthInsurance,
+      healthInsurance: Number(reqData.healthInsurance),
+      ctc: Number(reqData.ctc),
     };
     const findUser = await salary.findOne({ username: reqData.username });
     if (findUser) {
@@ -35,21 +36,33 @@ const userSalaryCreate = async (req: Request, res: Response) => {
           },
           {
             $set: {
-              currentSalary: requestBody,
-              "salaryHistory.$.hra": reqData.hra,
-              "salaryHistory.$.basicSalary": reqData.basicSalary,
-              "salaryHistory.$.travelAllowance": reqData.travelAllowance,
-              "salaryHistory.$.MedicalAllowance": reqData.MedicalAllowance,
-              "salaryHistory.$.LeaveTravelAllowance":
-                reqData.LeaveTravelAllowance,
-              "salaryHistory.$.SpecialAllowance": reqData.SpecialAllowance,
-              "salaryHistory.$.providentFund": reqData.providentFund,
-              "salaryHistory.$.professionalTax": reqData.professionalTax,
-              "salaryHistory.$.incomeTax": reqData.incomeTax,
-              "salaryHistory.$.totalEarning": reqData.totalEarning,
+              currentSalary: Number(requestBody),
+              "salaryHistory.$.hra": Number(reqData.hra),
+              "salaryHistory.$.basicSalary": Number(reqData.basicSalary),
+              "salaryHistory.$.travelAllowance": Number(
+                reqData.travelAllowance
+              ),
+              "salaryHistory.$.MedicalAllowance": Number(
+                reqData.MedicalAllowance
+              ),
+              "salaryHistory.$.LeaveTravelAllowance": Number(
+                reqData.LeaveTravelAllowance
+              ),
+              "salaryHistory.$.SpecialAllowance": Number(
+                reqData.SpecialAllowance
+              ),
+              "salaryHistory.$.providentFund": Number(reqData.providentFund),
+              "salaryHistory.$.professionalTax": Number(
+                reqData.professionalTax
+              ),
+              "salaryHistory.$.incomeTax": Number(reqData.incomeTax),
+              "salaryHistory.$.totalEarning": Number(reqData.totalEarning),
               "salaryHistory.$.updatedBy": reqData.updatedBy,
               "salaryHistory.$.date": reqData.date,
-              "salaryHistory.$.healthInsurance": reqData.healthInsurance,
+              "salaryHistory.$.healthInsurance": Number(
+                reqData.healthInsurance
+              ),
+              "salaryHistory.$.ctc": Number(reqData.ctc),
             },
           }
         );
