@@ -48,6 +48,7 @@ const userSalary = new mongoose.Schema(
         updatedBy: String,
         date: Date,
         healthInsurance: Number,
+        ctc: Number,
       },
     ],
   },
