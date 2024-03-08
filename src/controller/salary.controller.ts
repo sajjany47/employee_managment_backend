@@ -18,13 +18,16 @@ const userSalaryCreate = async (req: Request, res: Response) => {
       providentFund: Number(reqData.providentFund),
       professionalTax: Number(reqData.professionalTax),
       incomeTax: Number(reqData.incomeTax),
-      incrementType: reqData.incrementType,
-      incrementValue: Number(reqData.incrementValue),
+      incrementType:
+        reqData.incrementType !== "" ? reqData.incrementType : null,
+      incrementValue:
+        reqData.incrementValue !== "" ? Number(reqData.incrementValue) : null,
       totalEarning: Number(reqData.totalEarning),
       updatedBy: reqData.updatedBy,
       date: moment(new Date(reqData.date)).format(),
       healthInsurance: Number(reqData.healthInsurance),
       ctc: Number(reqData.ctc),
+      type: reqData.type,
     };
     const findUser = await salary.findOne({ username: reqData.username });
     if (findUser) {
@@ -36,8 +39,14 @@ const userSalaryCreate = async (req: Request, res: Response) => {
           },
           {
             $set: {
-              currentSalary: Number(requestBody),
+              currentSalary: requestBody,
               "salaryHistory.$.hra": Number(reqData.hra),
+              "salaryHistory.$.incrementType":
+                reqData.incrementType !== "" ? reqData.incrementType : null,
+              "salaryHistory.$.incrementValue":
+                reqData.incrementValue !== ""
+                  ? Number(reqData.incrementValue)
+                  : null,
               "salaryHistory.$.basicSalary": Number(reqData.basicSalary),
               "salaryHistory.$.travelAllowance": Number(
                 reqData.travelAllowance
