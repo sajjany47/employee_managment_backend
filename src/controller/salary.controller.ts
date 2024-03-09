@@ -18,10 +18,12 @@ const userSalaryCreate = async (req: Request, res: Response) => {
       providentFund: Number(reqData.providentFund),
       professionalTax: Number(reqData.professionalTax),
       incomeTax: Number(reqData.incomeTax),
-      incrementType:
-        reqData.incrementType !== "" ? reqData.incrementType : null,
+      incrementType: reqData.incrementType,
       incrementValue:
-        reqData.incrementValue !== "" ? Number(reqData.incrementValue) : null,
+        reqData.hasOwnProperty("incrementValue") &&
+        reqData.incrementValue !== ""
+          ? Number(reqData.incrementValue)
+          : null,
       totalEarning: Number(reqData.totalEarning),
       updatedBy: reqData.updatedBy,
       date: moment(new Date(reqData.date)).format(),
