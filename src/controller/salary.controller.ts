@@ -146,4 +146,16 @@ const salaryList = async (req: Request, res: Response) => {
   }
 };
 
-export { userSalaryCreate, salaryList, salaryUserAlloted };
+const singleUserList = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const data = await salary.findOne({ username: id });
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: data });
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+export { userSalaryCreate, salaryList, salaryUserAlloted, singleUserList };
