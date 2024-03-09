@@ -43,12 +43,8 @@ const userSalaryCreate = async (req: Request, res: Response) => {
             $set: {
               currentSalary: requestBody,
               "salaryHistory.$.hra": Number(reqData.hra),
-              "salaryHistory.$.incrementType":
-                reqData.incrementType !== "" ? reqData.incrementType : null,
-              "salaryHistory.$.incrementValue":
-                reqData.incrementValue !== ""
-                  ? Number(reqData.incrementValue)
-                  : null,
+              "salaryHistory.$.incrementType": reqData.incrementType,
+              "salaryHistory.$.incrementValue": Number(reqData.incrementValue),
               "salaryHistory.$.basicSalary": Number(reqData.basicSalary),
               "salaryHistory.$.travelAllowance": Number(
                 reqData.travelAllowance
