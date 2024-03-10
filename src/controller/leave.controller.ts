@@ -4,6 +4,7 @@ import leave from "../model/leave.model";
 import moment from "moment";
 import user from "../model/user.model";
 import mongoose from "mongoose";
+import { getDateRange, getWeekendDates } from "../utility/utility";
 
 const leaveAlloted = async (req: Request, res: Response) => {
   try {
@@ -146,17 +147,10 @@ const leaveApply = async (req: Request, res: Response) => {
     const startDay = moment(reqData.startDay);
     const endDay = moment(reqData.endDay);
 
-    const weekends: any = [];
-
-    for (
-      let date: any = startDay;
-      date.isSameOrBefore(endDay);
-      date.add(1, "days")
-    ) {
-      if (date.day() !== 0 && date.day() !== 6) {
-        weekends.push(new Date(date));
-      }
-    }
+    const weekends = getWeekendDates(
+      moment(reqData.startDay).format("YYYY-MM-DD"),
+      moment(reqData.endDay).format("YYYY-MM-DD")
+    );
 
     if (weekends.length > 0) {
       const findUser = await leave.aggregate([

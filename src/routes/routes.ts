@@ -38,6 +38,19 @@ import {
   userApplyLeaveList,
 } from "../controller/leave.controller";
 
+import {
+  salaryList,
+  salaryUserAlloted,
+  singleUserList,
+  userSalaryCreate,
+} from "../controller/salary.controller";
+import {
+  generatePayroll,
+  payrollListMonthWise,
+  payrollUpdate,
+  singleUserPayrollList,
+} from "../controller/payroll.controller";
+
 const routes = express.Router();
 routes.route("/sigin").post(login);
 routes.route("/activation-code").post(auth, generateActivationKey);
@@ -67,8 +80,15 @@ routes
   .route("/user-invalid-attendance/details")
   .get(auth, userInvalidAttendance);
 routes.route("/invalid-attendance/change").post(auth, inValidAttendanceChange);
+routes.route("/salary/structure-create").post(auth, userSalaryCreate);
+routes.route("/salary/user-list").get(auth, salaryUserAlloted);
+routes.route("/salary/list").get(auth, salaryList);
+routes.route("/salary/list/:id").get(auth, singleUserList);
+routes.route("/payroll/generate").post(auth, generatePayroll);
+routes.route("/payroll/update").post(auth, payrollUpdate);
+routes.route("/payroll/month/list").post(auth, payrollListMonthWise);
+routes.route("/payroll/user/list").post(auth, singleUserPayrollList);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
-
 routes.route("/user-datatable").post(auth, userDatatTable);
 
 export default routes;

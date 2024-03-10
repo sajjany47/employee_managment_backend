@@ -6,6 +6,7 @@ import moment from "moment";
 import leave from "../model/leave.model";
 import mongoose from "mongoose";
 import holidayList from "../model/holiday.model";
+import { getWeekendDates } from "../utility/utility";
 
 const timeData = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -339,20 +340,33 @@ const userTimeData = async (req: Request, res: Response) => {
 
             const leaveList = [];
             filterLeave.forEach((element: any) => {
-              for (
-                let date: any = moment(element.startDay);
-                date.isSameOrBefore(moment(element.startDay));
-                date.add(1, "days")
-              ) {
-                if (date.day() !== 0 && date.day() !== 6) {
-                  if (
-                    moment(date).format("YYYY-MM-DD") ===
-                    moment(reqData.date).format("YYYY-MM-DD")
-                  ) {
-                    leaveList.push(moment(date).format("YYYY-MM-DD"));
-                  }
+              const weekends = getWeekendDates(
+                moment(element.startDay).format("YYYY-MM-DD"),
+                moment(element.startDay).format("YYYY-MM-DD")
+              );
+
+              weekends.forEach((item: any) => {
+                if (
+                  moment(item).format("YYYY-MM-DD") ===
+                  moment(reqData.date).format("YYYY-MM-DD")
+                ) {
+                  leaveList.push(moment(item).format("YYYY-MM-DD"));
                 }
-              }
+              });
+              // for (
+              //   let date: any = moment(element.startDay);
+              //   date.isSameOrBefore(moment(element.startDay));
+              //   date.add(1, "days")
+              // ) {
+              //   if (date.day() !== 0 && date.day() !== 6) {
+              //     if (
+              //       moment(date).format("YYYY-MM-DD") ===
+              //       moment(reqData.date).format("YYYY-MM-DD")
+              //     ) {
+              //       leaveList.push(moment(date).format("YYYY-MM-DD"));
+              //     }
+              //   }
+              // }
             });
             if (leaveList.length > 0) {
               return res.status(StatusCodes.BAD_REQUEST).json({
