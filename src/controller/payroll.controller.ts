@@ -405,3 +405,30 @@ export {
   payrollListMonthWise,
   singleUserPayrollList,
 };
+
+// {
+//   "username": "sajjany47",
+//   "date": "2024-03-12T23:25:53+05:30",
+//   "currentMonthTotalLeave": 32,
+//   "absent": 0,
+//   "currentMonthTotalHoliday": 0,
+//   "totalMonthDays": 29,
+//   "totalWeekend": 8,
+//   "salaryStatus": "pending",
+//   "transactionNumber": null,
+//   "transactionDate": null,
+//   "accountNumber": null,
+//   "currentMonthSalary": {
+//       "basicSalary": 17600,
+//       "hra": 1320,
+//       "travelAllowance": 132,
+//       "MedicalAllowance": 257.4,
+//       "LeaveTravelAllowance": 257.4,
+//       "SpecialAllowance": 623.7,
+//       "providentFund": 1210,
+//       "professionalTax": 135.3,
+//       "incomeTax": 258.5,
+//       "totalEarning": 16982.900000000005,
+//       "otherDeduction": 1603.8
+//   }
+// }
