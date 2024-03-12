@@ -114,7 +114,7 @@ const generatePayroll = async (req: Request, res: Response) => {
           },
           {
             $lookup: {
-              from: "user_salary",
+              from: "user_salaries",
               localField: "_id",
               foreignField: "username",
               as: "salary",
@@ -178,7 +178,10 @@ const generatePayroll = async (req: Request, res: Response) => {
             (res: any) =>
               moment(res.holidayDate).format("YYYY-MM") === currentMonthYear
           );
-          const currentMontTotalDays = moment(new Date()).daysInMonth();
+          const currentMontTotalDays = moment(
+            currentMonthYear,
+            "YYYY-MM"
+          ).daysInMonth();
           const monthYear = currentMonthYear;
           const totalWeekHoliday: any = getWeekendDates(
             moment(`${monthYear}-01`, "YYYY-MM-DD"),
@@ -288,7 +291,7 @@ const generatePayroll = async (req: Request, res: Response) => {
             currentMonthSalary: userSalary,
           });
         });
-
+        // res.status(StatusCodes.OK).json({ data: currentMonthPayroll });
         const monthPayrollAdd = new payroll({
           date: currentMonthYear,
           userPayroll: currentMonthPayroll,
