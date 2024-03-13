@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import timeRecord from "../model/timeData.model";
 import moment from "moment";
-import { getWeekendDates } from "../utility/utility";
+import { calculateSalary, getWeekendDates } from "../utility/utility";
 import payroll from "../model/payroll.model";
 import mongoose from "mongoose";
 
@@ -189,98 +189,57 @@ const generatePayroll = async (req: Request, res: Response) => {
           );
 
           const a = item?.salary.currentSalary;
-          let userSalary: any = {};
-          userSalary.basicSalary =
-            (a.basicSalary / currentMontTotalDays) *
-            (item.date.length +
-              (currentMontTotalDays - totalWeekHoliday.length) -
-              totalAbsent);
-          // if (totalAbsent < 0) {
-          //   (userSalary.basicSalary = item?.salary.currentSalary.basicSalary),
-          //     (userSalary.hra = item?.salary.currentSalary.hra),
-          //     (userSalary.travelAllowance =
-          //       item?.salary.currentSalary.travelAllowance),
-          //     (userSalary.MedicalAllowance =
-          //       item?.salary.currentSalary.MedicalAllowance),
-          //     (userSalary.LeaveTravelAllowance =
-          //       item?.salary.currentSalary.LeaveTravelAllowance),
-          //     (userSalary.SpecialAllowance =
-          //       item?.salary.currentSalary.SpecialAllowance),
-          //     (userSalary.providentFund =
-          //       item?.salary.currentSalary.providentFund),
-          //     (userSalary.professionalTax =
-          //       item?.salary.currentSalary.professionalTax),
-          //     (userSalary.incomeTax = item?.salary.currentSalary.incomeTax),
-          //     (userSalary.totalEarning =
-          //       item?.salary.currentSalary.totalEarning);
-          // } else {
-          //   const basicSalary =
-          //     item?.salary.currentSalary.basicSalary -
-          //     (item?.salary.currentSalary.basicSalary / currentMontTotalDays) *
-          //       totalAbsent;
-          //   const hra =
-          //     item?.salary.currentSalary.hra -
-          //     (item?.salary.currentSalary.hra / currentMontTotalDays) *
-          //       totalAbsent;
-          //   const travelAllowance =
-          //     item?.salary.currentSalary.travelAllowance -
-          //     (item?.salary.currentSalary.travelAllowance /
-          //       currentMontTotalDays) *
-          //       totalAbsent;
-          //   const MedicalAllowance =
-          //     item?.salary.currentSalary.MedicalAllowance -
-          //     (item?.salary.currentSalary.MedicalAllowance /
-          //       currentMontTotalDays) *
-          //       totalAbsent;
-          //   const LeaveTravelAllowance =
-          //     item?.salary.currentSalary.LeaveTravelAllowance -
-          //     (item?.salary.currentSalary.LeaveTravelAllowance /
-          //       currentMontTotalDays) *
-          //       totalAbsent;
-          //   const SpecialAllowance =
-          //     item?.salary.currentSalary.SpecialAllowance -
-          //     (item?.salary.currentSalary.SpecialAllowance /
-          //       currentMontTotalDays) *
-          //       totalAbsent;
-          //   const otherDeduction =
-          //     item?.salary.currentSalary.providentFund -
-          //     (item?.salary.currentSalary.providentFund /
-          //       currentMontTotalDays) *
-          //       totalAbsent +
-          //     (item?.salary.currentSalary.professionalTax -
-          //       (item?.salary.currentSalary.professionalTax /
-          //         currentMontTotalDays) *
-          //         totalAbsent) +
-          //     (item?.salary.currentSalary.incomeTax -
-          //       (item?.salary.currentSalary.incomeTax / currentMontTotalDays) *
-          //         totalAbsent);
+          const b = currentMontTotalDays;
+          const c = item.date.length;
+          const d = totalWeekHoliday.length;
+          const e = totalAbsent;
+          const f = filterHoliday.length;
+          let userSalary: any = {
+            basicSalary: calculateSalary(a.basicSalary, b, c, d, e, f),
+            hra: calculateSalary(a.hra, b, c, d, e, f),
+            travelAllowance: calculateSalary(a.travelAllowance, b, c, d, e, f),
+            MedicalAllowance: calculateSalary(
+              a.MedicalAllowance,
+              b,
+              c,
+              d,
+              e,
+              f
+            ),
+            LeaveTravelAllowance: calculateSalary(
+              a.LeaveTravelAllowance,
+              b,
+              c,
+              d,
+              e,
+              f
+            ),
+            SpecialAllowance: calculateSalary(
+              a.SpecialAllowance,
+              b,
+              c,
+              d,
+              e,
+              f
+            ),
+            providentFund: calculateSalary(a.providentFund, b, c, d, e, f),
+            incomeTax: calculateSalary(a.incomeTax, b, c, d, e, f),
+            professionalTax: a.professionalTax,
+            healthInsurance: a.healthInsurance,
+            ctc: a.ctc,
+          };
 
-          //   /////////////////////////////////////////////////////////////////////////////////////////////////
-          //   userSalary.basicSalary = basicSalary;
-          //   userSalary.hra = hra;
-          //   userSalary.travelAllowance = travelAllowance;
-          //   userSalary.MedicalAllowance = MedicalAllowance;
-          //   userSalary.LeaveTravelAllowance = LeaveTravelAllowance;
-          //   userSalary.SpecialAllowance = SpecialAllowance;
-
-          //   (userSalary.providentFund =
-          //     item?.salary.currentSalary.providentFund),
-          //     (userSalary.professionalTax =
-          //       item?.salary.currentSalary.professionalTax),
-          //     (userSalary.incomeTax = item?.salary.currentSalary.incomeTax);
-          //   userSalary.totalEarning =
-          //     basicSalary +
-          //     hra +
-          //     travelAllowance +
-          //     MedicalAllowance +
-          //     LeaveTravelAllowance +
-          //     SpecialAllowance -
-          //     (item?.salary.currentSalary.providentFund +
-          //       item?.salary.currentSalary.professionalTax +
-          //       item?.salary.currentSalary.incomeTax) -
-          //     otherDeduction;
-          //   userSalary.otherDeduction = otherDeduction;
-          // }
+          userSalary.totalEarning =
+            userSalary.basicSalary +
+            userSalary.hra +
+            userSalary.travelAllowance +
+            userSalary.MedicalAllowance +
+            userSalary.LeaveTravelAllowance +
+            userSalary.SpecialAllowance -
+            userSalary.providentFund -
+            userSalary.incomeTax -
+            userSalary.professionalTax -
+            userSalary.healthInsurance;
 
           currentMonthPayroll.push({
             username: item._id,
@@ -299,16 +258,16 @@ const generatePayroll = async (req: Request, res: Response) => {
           });
         });
         res.status(StatusCodes.OK).json({ data: currentMonthPayroll });
-        // const monthPayrollAdd = new payroll({
-        //   date: currentMonthYear,
-        //   userPayroll: currentMonthPayroll,
-        // });
+        const monthPayrollAdd = new payroll({
+          date: currentMonthYear,
+          userPayroll: currentMonthPayroll,
+        });
 
-        // const saveMonthPayroll = await monthPayrollAdd.save();
-        // return res.status(StatusCodes.OK).json({
-        //   message: "Data fetched successfully",
-        //   data: saveMonthPayroll,
-        // });
+        const saveMonthPayroll = await monthPayrollAdd.save();
+        return res.status(StatusCodes.OK).json({
+          message: "Data fetched successfully",
+          data: saveMonthPayroll,
+        });
       }
     }
   } catch (error: any) {
