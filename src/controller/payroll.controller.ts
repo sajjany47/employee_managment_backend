@@ -307,26 +307,19 @@ const payrollUpdate = async (req: Request, res: Response) => {
 const payrollListMonthWise = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
-    const monthPayrollList = await payroll.aggregate([
-      {
-        $match: {
-          date: moment(reqData.date).format("YYYY-MM"),
-        },
-      },
-      {
-        $unwind: {
-          path: "$userPayroll",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $sort: { "userPayroll.salaryStatus": -1 },
-      },
-    ]);
 
-    res
-      .status(StatusCodes.OK)
-      .json({ message: "Data fetched successfully", data: monthPayrollList });
+    const monthPayrollList = await payroll.findOne({
+      date: moment(reqData.date).format("YYYY-MM"),
+    });
+    if (monthPayrollList) {
+      return res
+        .status(StatusCodes.OK)
+        .json({ message: "Data fetched successfully", data: monthPayrollList });
+    } else {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "Payroll not generated" });
+    }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
