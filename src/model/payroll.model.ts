@@ -6,7 +6,7 @@ const userPayroll = new mongoose.Schema(
     userPayroll: [
       {
         username: String,
-        date: Date,
+        date: String,
         currentMonthTotalLeave: Number,
         absent: Number,
         currentMonthTotalHoliday: Number,

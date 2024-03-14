@@ -243,7 +243,7 @@ const generatePayroll = async (req: Request, res: Response) => {
 
           currentMonthPayroll.push({
             username: item._id,
-            date: moment(new Date()).format(),
+            date: currentMonthYear,
             present: item.date.length,
             currentMonthTotalLeave: totalLeave.length,
             absent: totalAbsent,
