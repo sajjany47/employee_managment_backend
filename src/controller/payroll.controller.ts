@@ -5,6 +5,7 @@ import moment from "moment";
 import { calculateSalary, getWeekendDates } from "../utility/utility";
 import payroll from "../model/payroll.model";
 import mongoose from "mongoose";
+import user from "../model/user.model";
 
 const generatePayroll = async (req: Request, res: Response) => {
   try {
@@ -127,11 +128,26 @@ const generatePayroll = async (req: Request, res: Response) => {
             },
           },
           {
+            $lookup: {
+              from: "users",
+              localField: "_id",
+              foreignField: "username",
+              as: "bank",
+            },
+          },
+          {
+            $unwind: {
+              path: "$bank",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
             $project: {
               "leave.leaveDetail": 1,
               date: 1,
               "holiday.holidayList": 1,
               "salary.currentSalary": 1,
+              "bank.bankDetails": 1,
             },
           },
         ]);
@@ -253,11 +269,14 @@ const generatePayroll = async (req: Request, res: Response) => {
             salaryStatus: "pending",
             transactionNumber: null,
             transactionDate: null,
-            accountNumber: null,
+            accountNumber: item.bank.bankDetails.accountNumber,
+            bankName: item.bank.bankDetails.bankName,
+            ifsc: item.bank.bankDetails.ifsc,
+            branchName: item.bank.bankDetails.branchName,
             currentMonthSalary: userSalary,
           });
         });
-        res.status(StatusCodes.OK).json({ data: currentMonthPayroll });
+
         const monthPayrollAdd = new payroll({
           date: currentMonthYear,
           userPayroll: currentMonthPayroll,
@@ -286,9 +305,15 @@ const payrollUpdate = async (req: Request, res: Response) => {
       {
         $set: {
           "userPayroll.$.salaryStatus": reqData.status,
+          "userPayroll.$.currentMonthTotalLeave":
+            reqData.currentMonthTotalLeave,
+          "userPayroll.$.absent": reqData.absent,
+          "userPayroll.$.currentMonthTotalHoliday":
+            reqData.currentMonthTotalHoliday,
+          "userPayroll.$.totalWeekend": reqData.totalWeekend,
+          "userPayroll.$.currentMonthSalary": reqData.currentMonthSalary,
           "userPayroll.$.transactionNumber": reqData.transactionNumber,
           "userPayroll.$.transactionDate": reqData.transactionDate,
-          "userPayroll.$.accountNumber": reqData.accountNumber,
           "userPayroll.$.updatedBy": reqData.updatedBy,
           "userPayroll.$.updatedAt": moment(reqData.updatedAt).format(),
         },
