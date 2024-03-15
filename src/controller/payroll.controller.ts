@@ -170,23 +170,26 @@ const generatePayroll = async (req: Request, res: Response) => {
                 ...getWeekendDates(element.startDay, element.endDay)
               );
             });
+
+          let uniqueLeaveArray = [...new Set(totalLeave)];
+
           let currentLeaveList = [];
           let totalAbsent = 0;
           if (convertLeaveLeft >= 0) {
-            const currentMonthLeave = totalLeave.filter(
+            const currentMonthLeave = uniqueLeaveArray.filter(
               (a: any) => moment(a).format("YYYY-MM") === currentMonthYear
             );
             currentLeaveList.push(...currentMonthLeave);
             totalAbsent = 0;
           } else {
-            const currentMonthLeave = totalLeave.filter(
+            const currentMonthLeave = uniqueLeaveArray.filter(
               (a: any) => moment(a).format("YYYY-MM") === currentMonthYear
             );
-            const accessLeaveUse =
-              convertTotalLeave - convertLeaveLeft - convertTotalLeave;
+            const accessLeaveUse = convertTotalLeave - convertLeaveLeft;
             const absent = currentMonthLeave.length - accessLeaveUse;
             if (absent <= 0) {
               totalAbsent = currentMonthLeave.length;
+              currentLeaveList.push(...currentMonthLeave);
             }
           }
 
@@ -261,7 +264,7 @@ const generatePayroll = async (req: Request, res: Response) => {
             username: item._id,
             date: currentMonthYear,
             present: item.date.length,
-            currentMonthTotalLeave: totalLeave.length,
+            currentMonthTotalLeave: currentLeaveList.length,
             absent: totalAbsent,
             currentMonthTotalHoliday: filterHoliday.length,
             totalMonthDays: currentMontTotalDays,
