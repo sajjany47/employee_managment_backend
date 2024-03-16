@@ -213,17 +213,27 @@ const generatePayroll = async (req: Request, res: Response) => {
           const d = totalWeekHoliday.length;
           const e = totalAbsent;
           const f = filterHoliday.length;
+          const g = currentLeaveList.length;
           let userSalary: any = {
-            basicSalary: calculateSalary(a.basicSalary, b, c, d, e, f),
-            hra: calculateSalary(a.hra, b, c, d, e, f),
-            travelAllowance: calculateSalary(a.travelAllowance, b, c, d, e, f),
+            basicSalary: calculateSalary(a.basicSalary, b, c, d, e, f, g),
+            hra: calculateSalary(a.hra, b, c, d, e, f, g),
+            travelAllowance: calculateSalary(
+              a.travelAllowance,
+              b,
+              c,
+              d,
+              e,
+              f,
+              g
+            ),
             MedicalAllowance: calculateSalary(
               a.MedicalAllowance,
               b,
               c,
               d,
               e,
-              f
+              f,
+              g
             ),
             LeaveTravelAllowance: calculateSalary(
               a.LeaveTravelAllowance,
@@ -231,7 +241,8 @@ const generatePayroll = async (req: Request, res: Response) => {
               c,
               d,
               e,
-              f
+              f,
+              g
             ),
             SpecialAllowance: calculateSalary(
               a.SpecialAllowance,
@@ -239,10 +250,11 @@ const generatePayroll = async (req: Request, res: Response) => {
               c,
               d,
               e,
-              f
+              f,
+              g
             ),
-            providentFund: calculateSalary(a.providentFund, b, c, d, e, f),
-            incomeTax: calculateSalary(a.incomeTax, b, c, d, e, f),
+            providentFund: calculateSalary(a.providentFund, b, c, d, e, f, g),
+            incomeTax: calculateSalary(a.incomeTax, b, c, d, e, f, g),
             professionalTax: a.professionalTax,
             healthInsurance: a.healthInsurance,
             ctc: a.ctc,
