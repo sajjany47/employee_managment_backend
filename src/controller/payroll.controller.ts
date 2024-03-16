@@ -314,12 +314,12 @@ const payrollUpdate = async (req: Request, res: Response) => {
     const reqData = Object.assign({}, req.body);
     const updateUserPayroll = await payroll.findOneAndUpdate(
       {
-        date: moment(reqData.date).format("YYYY-MM"),
+        date: reqData.date,
         "userPayroll._id": new mongoose.Types.ObjectId(reqData.payrollId),
       },
       {
         $set: {
-          "userPayroll.$.salaryStatus": reqData.status,
+          "userPayroll.$.salaryStatus": reqData.salaryStatus,
           "userPayroll.$.currentMonthTotalLeave":
             reqData.currentMonthTotalLeave,
           "userPayroll.$.absent": reqData.absent,
