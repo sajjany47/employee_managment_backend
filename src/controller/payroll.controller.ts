@@ -424,7 +424,7 @@ const salarySlipGenerate = async (req: Request, res: Response) => {
             ],
           },
           "userPayroll.username": req.body.username,
-          "userPayroll.salaryStatus": "paid",
+          // "userPayroll.salaryStatus": "paid",
         },
       },
       {
@@ -467,11 +467,9 @@ const salarySlipGenerate = async (req: Request, res: Response) => {
       },
     ]);
 
-    const data = userSalaryDetails.length > 0 ? userSalaryDetails[0] : {};
-
     res
       .status(StatusCodes.OK)
-      .json({ message: "Data fetched successfully", data: data });
+      .json({ message: "Data fetched successfully", data: userSalaryDetails });
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
