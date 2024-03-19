@@ -48,6 +48,7 @@ import {
   generatePayroll,
   payrollListMonthWise,
   payrollUpdate,
+  salarySlipGenerate,
   singleUserPayrollList,
 } from "../controller/payroll.controller";
 
@@ -84,6 +85,7 @@ routes.route("/salary/structure-create").post(auth, userSalaryCreate);
 routes.route("/salary/user-list").get(auth, salaryUserAlloted);
 routes.route("/salary/list").get(auth, salaryList);
 routes.route("/salary/list/:id").get(auth, singleUserList);
+routes.route("/salary-slip/generate").post(auth, salarySlipGenerate);
 routes.route("/payroll/generate").post(auth, generatePayroll);
 routes.route("/payroll/update").post(auth, payrollUpdate);
 routes.route("/payroll/month/list").post(auth, payrollListMonthWise);

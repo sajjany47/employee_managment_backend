@@ -400,7 +400,78 @@ const singleUserPayrollList = async (req: Request, res: Response) => {
 
 const salarySlipGenerate = async (req: Request, res: Response) => {
   try {
-    const id = req.params.id;
+    const userSalaryDetails = await payroll.aggregate([
+      {
+        $unwind: {
+          path: "$userPayroll",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          convertDate: {
+            $toDate: "$date",
+          },
+        },
+      },
+      {
+        $match: {
+          $expr: {
+            $and: [
+              {
+                $eq: [{ $year: "$convertDate" }, req.body.year],
+              },
+            ],
+          },
+          "userPayroll.username": req.body.username,
+          "userPayroll.salaryStatus": "paid",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userPayroll.username",
+          foreignField: "username",
+          as: "userInfo",
+        },
+      },
+      {
+        $unwind: {
+          path: "$userInfo",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "user_salaries",
+          localField: "userPayroll.username",
+          foreignField: "username",
+          as: "salaryInfo",
+        },
+      },
+      {
+        $unwind: {
+          path: "$salaryInfo",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          userPayroll: 1,
+          "userInfo.document": 1,
+          "userInfo.position": 1,
+          "userInfo.email": 1,
+          "userInfo.mobile": 1,
+          "salaryInfo.currentSalary": 1,
+        },
+      },
+    ]);
+
+    const data = userSalaryDetails.length > 0 ? userSalaryDetails[0] : {};
+
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: data });
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
@@ -419,4 +490,5 @@ export {
   payrollUpdate,
   payrollListMonthWise,
   singleUserPayrollList,
+  salarySlipGenerate,
 };
