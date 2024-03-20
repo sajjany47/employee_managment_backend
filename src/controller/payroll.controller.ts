@@ -461,6 +461,8 @@ const salarySlipGenerate = async (req: Request, res: Response) => {
           "userInfo.document": 1,
           "userInfo.position": 1,
           "userInfo.email": 1,
+          "userInfo.name": 1,
+          "userInfo.dob": 1,
           "userInfo.mobile": 1,
           "salaryInfo.currentSalary": 1,
         },
