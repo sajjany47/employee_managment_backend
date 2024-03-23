@@ -84,9 +84,8 @@ export const salarySlipTemplate = (data: any) => {
       </style>
     <body>
     <div class="salary-slip">
-    <Table class="empDetail">
-      <TableBody>
-        <TableRow>
+    <table class="empDetail">
+        <tr>
           <th>Name</th>
           <td>${data.userInfo.name}</td>
           <td></td>
@@ -95,9 +94,9 @@ export const salarySlipTemplate = (data: any) => {
           <td></td>
           <th>Period</th>
           <td>${moment(data.userPayroll.date).format("MMM,YYYY")}</td>
-        </TableRow>
+        </tr>
 
-        <TableRow>
+        <tr>
           <th>Employee Code</th>
           <td>${data.userPayroll.username}</td>
           <td></td>
@@ -114,8 +113,8 @@ export const salarySlipTemplate = (data: any) => {
               data.userPayroll.absent
             }
           </td>
-        </TableRow>
-        <TableRow>
+        </tr>
+        <tr>
           <th>Position</th>
           <td>${data.userInfo.position}</td>
           <td></td>
@@ -124,8 +123,8 @@ export const salarySlipTemplate = (data: any) => {
           <td></td>
           <th>Days</th>
           <td>${data.userPayroll.totalMonthDays}</td>
-        </TableRow>
-        <TableRow>
+        </tr>
+        <tr>
           <th>Mobile</th>
           <td>${data.userInfo.mobile}</td>
           <td></td>
@@ -134,8 +133,8 @@ export const salarySlipTemplate = (data: any) => {
           <td></td>
           <th>Absent</th>
           <td>${data.userPayroll.absent}</td>
-        </TableRow>
-        <TableRow>
+        </tr>
+        <tr>
           <th>DOB</th>
           <td>${moment(data.userInfo.dob).format("DD MMM, YYYY")}</td>
           <td></td>
@@ -144,8 +143,8 @@ export const salarySlipTemplate = (data: any) => {
           <td></td>
           <th>Leave</th>
           <td>${data.userPayroll.currentMonthTotalLeave}</td>
-        </TableRow>
-        <TableRow>
+        </tr>
+        <tr>
           <th></th>
           <td></td>
           <td></td>
@@ -154,8 +153,8 @@ export const salarySlipTemplate = (data: any) => {
           <td></td>
           <th></th>
           <td></td>
-        </TableRow>
-        <TableRow>
+        </tr>
+        <tr>
           <th></th>
           <td></td>
           <td></td>
@@ -164,88 +163,88 @@ export const salarySlipTemplate = (data: any) => {
           <td></td>
           <th></th>
           <td></td>
-        </TableRow>
+        </tr>
 
-        <TableRow class="myBackground">
-          <th class="col-span-2">Payments</th>
+        <tr class="myBackground">
+          <th colspan='2'>Payments</th>
           <th>CTC</th>
           <th class="table-border-right">Amount (Rs.)</th>
-          <th class="col-span-2">Deductions</th>
+          <th colspan='2'>Deductions</th>
           <th>CTC</th>
           <th>Amount (Rs.)</th>
-        </TableRow>
-        <TableRow>
-          <th class="col-span-2">Basic Salary</th>
+        </tr>
+        <tr>
+          <th colspan='2'>Basic Salary</th>
           <td>${data.salaryInfo.currentSalary.basicSalary}</td>
           <td class="myAlign">
             ${data.userPayroll.currentMonthSalary.basicSalary}
           </td>
-          <th class="col-span-2">Provident Fund</th>
+          <th colspan='2'>Provident Fund</th>
           <td>${data.salaryInfo.currentSalary.providentFund}</td>
 
           <td class="myAlign">
             ${data.userPayroll.currentMonthSalary.providentFund}
           </td>
-        </TableRow>
-        <TableRow>
-          <th class="col-span-2">HRA</th>
+        </tr>
+        <tr>
+          <th colspan='2'>HRA</th>
           <td>${data.salaryInfo.currentSalary.hra}</td>
 
           <td class="myAlign">${data.userPayroll.currentMonthSalary.hra}</td>
-          <th class="col-span-2">Health Insurance</th>
+          <th colspan='2'>Health Insurance</th>
           <td>${data.salaryInfo.currentSalary.healthInsurance}</td>
 
           <td class="myAlign">
             ${data.userPayroll.currentMonthSalary.healthInsurance}
           </td>
-        </TableRow>
-        <TableRow>
-          <th class="col-span-2">Travel Allowance</th>
+        </tr>
+        <tr>
+          <th colspan='2'>Travel Allowance</th>
           <td>${data.salaryInfo.currentSalary.travelAllowance}</td>
 
           <td class="myAlign">
             ${data.userPayroll.currentMonthSalary.travelAllowance}
           </td>
-          <th class="col-span-2">Professional Tax</th>
+          <th colspan='2'>Professional Tax</th>
           <td>${data.salaryInfo.currentSalary.professionalTax}</td>
           <td class="myAlign">
             ${data.userPayroll.currentMonthSalary.professionalTax}
           </td>
-        </TableRow>
-        <TableRow>
-          <th class="col-span-2">Medical Allowance</th>
+        </tr>
+        <tr>
+          <th colspan='2'>Medical Allowance</th>
           <td>${data.salaryInfo.currentSalary.MedicalAllowance}</td>
           <td class="myAlign">
             ${data.userPayroll.currentMonthSalary.MedicalAllowance}
           </td>
-          <th class="col-span-2">Income Tax</th>
+          <th colspan='2'>Income Tax</th>
           <td>${data.salaryInfo.currentSalary.incomeTax}</td>
           <td class="myAlign">
             ${data.userPayroll.currentMonthSalary.incomeTax}
           </td>
-        </TableRow>
-        <TableRow>
-          <th class="col-span-2">LeaveTravel Allowance</th>
+        </tr>
+        <tr>
+          <th colspan='2'>LeaveTravel Allowance</th>
           <td>${data.salaryInfo.currentSalary.LeaveTravelAllowance}</td>
 
           <td class="myAlign">
             ${data.userPayroll.currentMonthSalary.LeaveTravelAllowance}
           </td>
-          <th class="col-span-2"></th>
+          <th colspan='2'></th>
           <td></td>
           <td class="myAlign"></td>
-        </TableRow>
-        <TableRow>
-          <th class="col-span-2">Special Allowance</th>
+        </tr>
+        <tr>
+          <th colspan='2'>Special Allowance</th>
           <td>${data.salaryInfo.currentSalary.SpecialAllowance}</td>
           <td class="myAlign">
             ${data.userPayroll.currentMonthSalary.SpecialAllowance}
           </td>
-          <th class="col-span-2"></th>
+          <th colspan='2'></th>
           <td></td>
           <td class="myAlign"></td>
-        </TableRow>
-        <TableRow>
+        </tr>
+        <tr>
           <th></th>
           <td></td>
           <td></td>
@@ -254,8 +253,8 @@ export const salarySlipTemplate = (data: any) => {
           <td></td>
           <th></th>
           <td></td>
-        </TableRow>
-        <TableRow>
+        </tr>
+        <tr>
           <th></th>
           <td></td>
           <td></td>
@@ -264,10 +263,10 @@ export const salarySlipTemplate = (data: any) => {
           <td></td>
           <th></th>
           <td></td>
-        </TableRow>
+        </tr>
 
-        <TableRow class="myBackground ">
-          <th class="col-span-2"></th>
+        <tr class="myBackground ">
+          <th colspan='2'></th>
           <th></th>
 
           <td></td>
@@ -276,9 +275,9 @@ export const salarySlipTemplate = (data: any) => {
           <td class="table-border-right"></td>
           <th class="table-border-bottom col-span-2">Net Salary</th>
           <td>INR ${data.userPayroll.currentMonthSalary.totalEarning}</td>
-        </TableRow>
-      </TableBody>
-    </Table>
+        </tr>
+      
+    </table>
     </div>
     </body>
     </html>`;
