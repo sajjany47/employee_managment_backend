@@ -6,6 +6,7 @@ import { calculateSalary, getWeekendDates } from "../utility/utility";
 import payroll from "../model/payroll.model";
 import mongoose from "mongoose";
 import user from "../model/user.model";
+import { salarySlipTemplate } from "../utility/template";
 
 const generatePayroll = async (req: Request, res: Response) => {
   try {
@@ -477,13 +478,16 @@ const salarySlipGenerate = async (req: Request, res: Response) => {
   }
 };
 
-// const createPDF = () => {
-//   const pdf = new jsPDF("l", "pt", [1088, 1040]);
-//   const data = document.querySelector("#genpdf");
-//   pdf.html(data, { margin: 40 }).then(() => {
-//     pdf.save(props?.paymentData?.invoiceNumber + ".pdf");
-//   });
-// };
+const salarySlipDownload = async (req: Request, res: Response) => {
+  try {
+    const result = salarySlipTemplate(req.body.data);
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: result });
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
 
 export {
   generatePayroll,
@@ -491,4 +495,5 @@ export {
   payrollListMonthWise,
   singleUserPayrollList,
   salarySlipGenerate,
+  salarySlipDownload,
 };

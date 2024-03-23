@@ -48,6 +48,7 @@ import {
   generatePayroll,
   payrollListMonthWise,
   payrollUpdate,
+  salarySlipDownload,
   salarySlipGenerate,
   singleUserPayrollList,
 } from "../controller/payroll.controller";
@@ -90,6 +91,7 @@ routes.route("/payroll/generate").post(auth, generatePayroll);
 routes.route("/payroll/update").post(auth, payrollUpdate);
 routes.route("/payroll/month/list").post(auth, payrollListMonthWise);
 routes.route("/payroll/user/list").post(auth, singleUserPayrollList);
+routes.route("/salary-slip/download").post(auth, salarySlipDownload);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 routes.route("/user-datatable").post(auth, userDatatTable);
 
