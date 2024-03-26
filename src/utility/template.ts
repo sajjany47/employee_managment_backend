@@ -7,9 +7,7 @@ export const salarySlipTemplate = (data: any) => {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Index page</title>
- 
-  </head>
-    <style>
+ <style>
     .salary-slip {
         margin: 15px;
       }
@@ -82,8 +80,10 @@ export const salarySlipTemplate = (data: any) => {
         padding-left: 6px;
       }
       </style>
-    <body>
-    <div class="salary-slip">
+  </head>
+    
+    <body class="salary-slip">
+   
     <table class="empDetail">
         <tr>
           <th>Name</th>
@@ -278,7 +278,7 @@ export const salarySlipTemplate = (data: any) => {
         </tr>
       
     </table>
-    </div>
+   
     </body>
     </html>`;
 
