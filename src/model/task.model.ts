@@ -4,13 +4,15 @@ const taskModel = new mongoose.Schema(
   {
     taskSender: String,
     taskReceiver: String,
-    taskDate: Date,
+    taskStartDate: Date,
+    takDeadline: Date,
     taskYear: Date,
     taskStatus: {
       type: String,
       trim: true,
       lowercase: true,
       enum: [
+        "assign",
         "todo",
         "hold",
         "cancelled",
@@ -21,7 +23,6 @@ const taskModel = new mongoose.Schema(
       ],
     },
     taskRating: Number,
-    takDeadline: Date,
     taskDetails: String,
     taskRemark: String,
     taskProject: String,
