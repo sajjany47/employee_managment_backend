@@ -10,7 +10,7 @@ const employeeList = async (req: Request, res: Response) => {
         {
           registrationStatus: "verified",
         },
-        { password: 0 }
+        { username: 1, name: 1 }
       )
       .sort({ createdAt: -1 });
 
