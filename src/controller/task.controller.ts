@@ -8,7 +8,7 @@ const taskAssign = async (req: Request, res: Response) => {
   try {
     const reqData = req.body;
     const newtask = new task({
-      taskSender: reqData.taskSender,
+      taskSender: req.body.user.username,
       taskReceiver: reqData.taskReceiver,
       taskStartDate: reqData.taskStartDate,
       takDeadline: reqData.takDeadline,
@@ -61,30 +61,32 @@ const taskUpdate = async (req: Request, res: Response) => {
 const taskList = async (req: Request, res: Response) => {
   try {
     const reqData = req.query;
+    const query: any = {};
     if (reqData.hasOwnProperty("sender")) {
-      const result = await task
-        .find({
-          taskSender: reqData.sender,
-          taskYear: reqData.year,
-          taskStatus: reqData.taskStatus,
-        })
-        .sort({ createdAt: -1 });
-      return res
-        .status(StatusCodes.OK)
-        .json({ message: "Data fetched successfully", data: result });
+      if (reqData.status === "all") {
+        query.taskYear = reqData.year;
+        query.taskSender = req.body.user.username;
+      } else {
+        query.taskYear = reqData.year;
+        query.taskSender = req.body.user.username;
+        query.taskStatus = reqData.status;
+      }
     }
     if (reqData.hasOwnProperty("receiver")) {
-      const result = await task
-        .find({
-          taskReceiver: reqData.receiver,
-          taskYear: reqData.year,
-          taskStatus: reqData.taskStatus,
-        })
-        .sort({ createdAt: -1 });
-      return res
-        .status(StatusCodes.OK)
-        .json({ message: "Data fetched successfully", data: result });
+      if (reqData.status === "all") {
+        query.taskYear = reqData.year;
+        query.receiver = req.body.user.username;
+      } else {
+        query.taskYear = reqData.year;
+        query.receiver = req.body.user.username;
+        query.taskStatus = reqData.status;
+      }
     }
+
+    const result = await task.find(query).sort({ createdAt: -1 });
+    return res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: result });
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }

@@ -260,18 +260,29 @@ const login = async (req: Request, res: Response) => {
           checkUser.password
         );
         if (verifyPassword) {
-          const userData = await user.aggregate([
-            { $match: { _id: checkUser._id } },
-            { $project: { password: 0 } },
-          ]);
+          // const userData = await user.aggregate([
+          //   { $match: { _id: checkUser._id } },
+          //   { $project: { password: 0 } },
+          // ]);
+
+          const userData = await user.findOne(
+            {
+              _id: checkUser._id,
+            },
+            { password: 0 }
+          );
 
           const scretKey: any = process.env.secret_Key;
-          const token = jwt.sign({ _id: checkUser._id }, scretKey, {
-            expiresIn: "6h",
-          });
+          const token = jwt.sign(
+            { _id: checkUser._id, username: checkUser.username },
+            scretKey,
+            {
+              expiresIn: "6h",
+            }
+          );
           // const userData: any = checkUser.project({ password: 0 });
           // console.log(userData);
-          res.status(StatusCodes.OK).json({ user: userData[0], token: token });
+          res.status(StatusCodes.OK).json({ user: userData, token: token });
         } else {
           res
             .status(StatusCodes.UNAUTHORIZED)
