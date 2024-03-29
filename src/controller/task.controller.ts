@@ -32,8 +32,9 @@ const taskAssign = async (req: Request, res: Response) => {
 const taskUpdate = async (req: Request, res: Response) => {
   try {
     const reqData = req.body;
+
     const updateTask = await task.findOneAndUpdate(
-      { _id: new mongoose.Schema.ObjectId(reqData.id) },
+      { _id: reqData.id },
       {
         $set: {
           taskSender: reqData.taskSender,
