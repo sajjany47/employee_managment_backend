@@ -1,4 +1,6 @@
 import moment from "moment";
+import notify from "../model/notification.model";
+import mongoose from "mongoose";
 
 export const getDateRange = (firstDate: any, lastDate: any) => {
   if (
@@ -62,4 +64,24 @@ export const calculateSalary = (
   ).toFixed(2);
 
   return Number(total);
+};
+
+export const notificationSave = async (
+  sender: any,
+  receiver: any,
+  date: any,
+  remark: any,
+  status: any,
+  id: any
+) => {
+  const newNotification = new notify({
+    sender: sender,
+    receiver: receiver,
+    date: date,
+    remark: remark,
+    status: status,
+    notifyId: id,
+  });
+
+  const saveData = await newNotification.save();
 };
