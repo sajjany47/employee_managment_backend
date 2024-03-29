@@ -57,6 +57,7 @@ import {
   taskList,
   taskUpdate,
 } from "../controller/task.controller";
+import { notificationList } from "../controller/notification.controller";
 
 const routes = express.Router();
 routes.route("/sigin").post(login);
@@ -100,6 +101,7 @@ routes.route("/salary-slip/download").post(auth, salarySlipDownload);
 routes.route("/task/create").post(auth, taskAssign);
 routes.route("/task/update").post(auth, taskUpdate);
 routes.route("/task/list").get(auth, taskList);
+routes.route("/notification").get(auth, notificationList);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 routes.route("/user-datatable").post(auth, userDatatTable);
 

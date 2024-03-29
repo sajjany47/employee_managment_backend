@@ -67,21 +67,18 @@ export const calculateSalary = (
 };
 
 export const notificationSave = async (
-  sender: any,
   receiver: any,
-  date: any,
   remark: any,
-  status: any,
-  id: any
+  status: any
 ) => {
   const newNotification = new notify({
-    sender: sender,
     receiver: receiver,
-    date: date,
+    date: new Date(),
     remark: remark,
     status: status,
-    notifyId: id,
   });
 
   const saveData = await newNotification.save();
+
+  return saveData;
 };

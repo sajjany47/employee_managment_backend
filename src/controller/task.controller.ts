@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import task from "../model/task.model";
 import moment from "moment";
-import mongoose from "mongoose";
+import { notificationSave } from "../utility/utility";
 
 const taskAssign = async (req: Request, res: Response) => {
   try {
@@ -21,9 +21,16 @@ const taskAssign = async (req: Request, res: Response) => {
     });
 
     const saveData = await newtask.save();
-    res
-      .status(StatusCodes.OK)
-      .json({ message: "Task Assign Successfully", data: saveData });
+    if (saveData) {
+      notificationSave(
+        reqData.taskReceiver,
+        `${req.body.user.username} assign you a new task`,
+        false
+      );
+      return res
+        .status(StatusCodes.OK)
+        .json({ message: "Task Assign Successfully", data: saveData });
+    }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
@@ -51,9 +58,16 @@ const taskUpdate = async (req: Request, res: Response) => {
       }
     );
 
-    res
-      .status(StatusCodes.OK)
-      .json({ message: "Task updated successfully", data: updateTask });
+    if (updateTask) {
+      notificationSave(
+        reqData.type === "sender" ? reqData.taskSender : reqData.taskReceiver,
+        `Assign task status changed`,
+        false
+      );
+      return res
+        .status(StatusCodes.OK)
+        .json({ message: "Task updated successfully", data: updateTask });
+    }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
@@ -94,6 +108,3 @@ const taskList = async (req: Request, res: Response) => {
 };
 
 export { taskAssign, taskUpdate, taskList };
-
-// http://localhost:8081/employee/api/task/list?sender=sajjany47&year=2024&status=pending
-// { sender: 'sajjany47', year: '2024', status: 'pending' }
