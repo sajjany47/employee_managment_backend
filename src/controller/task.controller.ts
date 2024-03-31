@@ -90,15 +90,16 @@ const taskList = async (req: Request, res: Response) => {
     if (reqData.hasOwnProperty("receiver")) {
       if (reqData.status === "all") {
         query.taskYear = reqData.year;
-        query.receiver = req.body.user.username;
+        query.taskReceiver = req.body.user.username;
       } else {
         query.taskYear = reqData.year;
-        query.receiver = req.body.user.username;
+        query.taskReceiver = req.body.user.username;
         query.taskStatus = reqData.status;
       }
     }
 
-    const result = await task.find(query).sort({ createdAt: -1 });
+    const result = await task.find(query);
+
     return res
       .status(StatusCodes.OK)
       .json({ message: "Data fetched successfully", data: result });
