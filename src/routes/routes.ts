@@ -13,6 +13,7 @@ import {
 } from "../controller/user.controller";
 import { auth } from "../middleware/auth.middleware";
 import {
+  attendanceList,
   inValidAttendanceChange,
   multiUserLeaveAdd,
   userAttendanceDetails,
@@ -88,6 +89,7 @@ routes
   .route("/user-invalid-attendance/details")
   .get(auth, userInvalidAttendance);
 routes.route("/invalid-attendance/change").post(auth, inValidAttendanceChange);
+routes.route("/time-record/list").post(attendanceList);
 routes.route("/salary/structure-create").post(auth, userSalaryCreate);
 routes.route("/salary/user-list").get(auth, salaryUserAlloted);
 routes.route("/salary/list").get(auth, salaryList);

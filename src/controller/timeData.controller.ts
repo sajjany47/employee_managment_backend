@@ -613,6 +613,67 @@ const inValidAttendanceChange = async (req: Request, res: Response) => {
   }
 };
 
+const attendanceList = async (req: Request, res: Response) => {
+  try {
+    const year = moment(req.body.date).format("YYYY");
+    const month = moment(req.body.date).format("MM");
+
+    const result = await timeRecord.aggregate([
+      {
+        $unwind: {
+          path: "$timeSchedule",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          convertDate: {
+            $toDate: "$timeSchedule.date",
+          },
+        },
+      },
+      {
+        $match: {
+          $expr: {
+            $and: [
+              {
+                $eq: [{ $year: "$convertDate" }, Number(year)],
+              },
+              {
+                $eq: [{ $month: "$convertDate" }, Number(month)],
+              },
+            ],
+          },
+          "timeSchedule.totalTime": { $ne: null },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          username: 1,
+          "timeSchedule.updatedBy": 1,
+          "timeSchedule._id": 1,
+          "timeSchedule.date": 1,
+          "timeSchedule.totalTime": 1,
+          "timeSchedule.startTime": 1,
+          "timeSchedule.endTime": 1,
+        },
+      },
+      {
+        $sort: {
+          "timeSchedule.date": -1,
+        },
+      },
+    ]);
+
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: result });
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 export {
   timeData,
   leaveApply,
@@ -623,4 +684,5 @@ export {
   userAttendanceDetails,
   userInvalidAttendance,
   inValidAttendanceChange,
+  attendanceList,
 };
