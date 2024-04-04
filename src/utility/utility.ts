@@ -1,4 +1,6 @@
 import moment from "moment";
+import notify from "../model/notification.model";
+import mongoose from "mongoose";
 
 export const getDateRange = (firstDate: any, lastDate: any) => {
   if (
@@ -34,4 +36,49 @@ export const getWeekendDates = (startDate: any, endDate: any) => {
   }
 
   return weekendDates;
+};
+
+export const calculateSalary = (
+  a: any,
+  b: any,
+  c: any,
+  d: any,
+  e: any,
+  f: any,
+  g: any
+) => {
+  const salary = Number(a);
+  const currentMonthTotalDays = Number(b);
+  const present = Number(c);
+  const weekendLength = Number(d);
+  const absent = Number(e);
+  const holiday = Number(f);
+  const currentMonthLeave = Number(g);
+  const total = (
+    (salary / currentMonthTotalDays) *
+    (present +
+      (currentMonthTotalDays - weekendLength) +
+      currentMonthLeave +
+      holiday -
+      absent)
+  ).toFixed(2);
+
+  return Number(total);
+};
+
+export const notificationSave = async (
+  receiver: any,
+  remark: any,
+  status: any
+) => {
+  const newNotification = new notify({
+    receiver: receiver,
+    date: new Date(),
+    remark: remark,
+    status: status,
+  });
+
+  const saveData = await newNotification.save();
+
+  return saveData;
 };

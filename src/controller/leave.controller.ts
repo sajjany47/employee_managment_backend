@@ -144,8 +144,8 @@ const editLeaveAlloctated = async (req: Request, res: Response) => {
 const leaveApply = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
-    const startDay = moment(reqData.startDay);
-    const endDay = moment(reqData.endDay);
+    // const startDay = moment(reqData.startDay);
+    // const endDay = moment(reqData.endDay);
 
     const weekends = getWeekendDates(
       moment(reqData.startDay).format("YYYY-MM-DD"),

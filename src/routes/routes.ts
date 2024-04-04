@@ -13,6 +13,7 @@ import {
 } from "../controller/user.controller";
 import { auth } from "../middleware/auth.middleware";
 import {
+  attendanceList,
   inValidAttendanceChange,
   multiUserLeaveAdd,
   userAttendanceDetails,
@@ -48,8 +49,16 @@ import {
   generatePayroll,
   payrollListMonthWise,
   payrollUpdate,
+  salarySlipDownload,
+  salarySlipGenerate,
   singleUserPayrollList,
 } from "../controller/payroll.controller";
+import {
+  taskAssign,
+  taskList,
+  taskUpdate,
+} from "../controller/task.controller";
+import { notificationList } from "../controller/notification.controller";
 
 const routes = express.Router();
 routes.route("/sigin").post(login);
@@ -66,7 +75,7 @@ routes.route("/holiday-list/:id").get(auth, holidayListData);
 routes.route("/create-holiday").post(auth, createHolidayList);
 routes.route("/delete-holiday").post(auth, deleteHolidayList);
 routes.route("/single-user/leave-create").post(auth, leaveAlloted);
-routes.route("/userlist/leave/:year").get(getNewUserList);
+routes.route("/userlist/leave/:year").get(auth, getNewUserList);
 routes.route("/leave-alloted-list/:id").get(auth, leaveList);
 routes.route("/leave-apply").post(auth, leaveApply);
 routes.route("/leave-apply-list").post(auth, applyLeaveList);
@@ -80,14 +89,21 @@ routes
   .route("/user-invalid-attendance/details")
   .get(auth, userInvalidAttendance);
 routes.route("/invalid-attendance/change").post(auth, inValidAttendanceChange);
+routes.route("/time-record/list").post(attendanceList);
 routes.route("/salary/structure-create").post(auth, userSalaryCreate);
 routes.route("/salary/user-list").get(auth, salaryUserAlloted);
 routes.route("/salary/list").get(auth, salaryList);
 routes.route("/salary/list/:id").get(auth, singleUserList);
+routes.route("/salary-slip/generate").post(auth, salarySlipGenerate);
 routes.route("/payroll/generate").post(auth, generatePayroll);
 routes.route("/payroll/update").post(auth, payrollUpdate);
 routes.route("/payroll/month/list").post(auth, payrollListMonthWise);
 routes.route("/payroll/user/list").post(auth, singleUserPayrollList);
+routes.route("/salary-slip/download").post(auth, salarySlipDownload);
+routes.route("/task/create").post(auth, taskAssign);
+routes.route("/task/update").post(auth, taskUpdate);
+routes.route("/task/list").get(auth, taskList);
+routes.route("/notification").get(auth, notificationList);
 routes.route("/multi-user/leave-add").post(multiUserLeaveAdd);
 routes.route("/user-datatable").post(auth, userDatatTable);
 

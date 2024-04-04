@@ -2,9 +2,11 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import timeRecord from "../model/timeData.model";
 import moment from "moment";
-import { getWeekendDates } from "../utility/utility";
+import { calculateSalary, getWeekendDates } from "../utility/utility";
 import payroll from "../model/payroll.model";
 import mongoose from "mongoose";
+import user from "../model/user.model";
+import { salarySlipTemplate } from "../utility/template";
 
 const generatePayroll = async (req: Request, res: Response) => {
   try {
@@ -114,7 +116,7 @@ const generatePayroll = async (req: Request, res: Response) => {
           },
           {
             $lookup: {
-              from: "user_salary",
+              from: "user_salaries",
               localField: "_id",
               foreignField: "username",
               as: "salary",
@@ -127,11 +129,26 @@ const generatePayroll = async (req: Request, res: Response) => {
             },
           },
           {
+            $lookup: {
+              from: "users",
+              localField: "_id",
+              foreignField: "username",
+              as: "bank",
+            },
+          },
+          {
+            $unwind: {
+              path: "$bank",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
             $project: {
               "leave.leaveDetail": 1,
               date: 1,
               "holiday.holidayList": 1,
               "salary.currentSalary": 1,
+              "bank.bankDetails": 1,
             },
           },
         ]);
@@ -154,23 +171,26 @@ const generatePayroll = async (req: Request, res: Response) => {
                 ...getWeekendDates(element.startDay, element.endDay)
               );
             });
+
+          let uniqueLeaveArray = [...new Set(totalLeave)];
+
           let currentLeaveList = [];
           let totalAbsent = 0;
           if (convertLeaveLeft >= 0) {
-            const currentMonthLeave = totalLeave.filter(
+            const currentMonthLeave = uniqueLeaveArray.filter(
               (a: any) => moment(a).format("YYYY-MM") === currentMonthYear
             );
             currentLeaveList.push(...currentMonthLeave);
             totalAbsent = 0;
           } else {
-            const currentMonthLeave = totalLeave.filter(
+            const currentMonthLeave = uniqueLeaveArray.filter(
               (a: any) => moment(a).format("YYYY-MM") === currentMonthYear
             );
-            const accessLeaveUse =
-              convertTotalLeave - convertLeaveLeft - convertTotalLeave;
+            const accessLeaveUse = convertTotalLeave - convertLeaveLeft;
             const absent = currentMonthLeave.length - accessLeaveUse;
             if (absent <= 0) {
               totalAbsent = currentMonthLeave.length;
+              currentLeaveList.push(...currentMonthLeave);
             }
           }
 
@@ -178,105 +198,86 @@ const generatePayroll = async (req: Request, res: Response) => {
             (res: any) =>
               moment(res.holidayDate).format("YYYY-MM") === currentMonthYear
           );
-          const currentMontTotalDays = moment(new Date()).daysInMonth();
+          const currentMontTotalDays = moment(
+            currentMonthYear,
+            "YYYY-MM"
+          ).daysInMonth();
           const monthYear = currentMonthYear;
           const totalWeekHoliday: any = getWeekendDates(
             moment(`${monthYear}-01`, "YYYY-MM-DD"),
             moment(`${monthYear}-${currentMontTotalDays}`, "YYYY-MM-DD")
           );
 
-          let userSalary: any = {};
-          if (totalAbsent < 0) {
-            (userSalary.basicSalary = item?.salary.currentSalary.basicSalary),
-              (userSalary.hra = item?.salary.currentSalary.hra),
-              (userSalary.travelAllowance =
-                item?.salary.currentSalary.travelAllowance),
-              (userSalary.MedicalAllowance =
-                item?.salary.currentSalary.MedicalAllowance),
-              (userSalary.LeaveTravelAllowance =
-                item?.salary.currentSalary.LeaveTravelAllowance),
-              (userSalary.SpecialAllowance =
-                item?.salary.currentSalary.SpecialAllowance),
-              (userSalary.providentFund =
-                item?.salary.currentSalary.providentFund),
-              (userSalary.professionalTax =
-                item?.salary.currentSalary.professionalTax),
-              (userSalary.incomeTax = item?.salary.currentSalary.incomeTax),
-              (userSalary.totalEarning =
-                item?.salary.currentSalary.totalEarning);
-          } else {
-            const basicSalary =
-              item?.salary.currentSalary.basicSalary -
-              (item?.salary.currentSalary.basicSalary / currentMontTotalDays) *
-                totalAbsent;
-            const hra =
-              item?.salary.currentSalary.hra -
-              (item?.salary.currentSalary.hra / currentMontTotalDays) *
-                totalAbsent;
-            const travelAllowance =
-              item?.salary.currentSalary.travelAllowance -
-              (item?.salary.currentSalary.travelAllowance /
-                currentMontTotalDays) *
-                totalAbsent;
-            const MedicalAllowance =
-              item?.salary.currentSalary.MedicalAllowance -
-              (item?.salary.currentSalary.MedicalAllowance /
-                currentMontTotalDays) *
-                totalAbsent;
-            const LeaveTravelAllowance =
-              item?.salary.currentSalary.LeaveTravelAllowance -
-              (item?.salary.currentSalary.LeaveTravelAllowance /
-                currentMontTotalDays) *
-                totalAbsent;
-            const SpecialAllowance =
-              item?.salary.currentSalary.SpecialAllowance -
-              (item?.salary.currentSalary.SpecialAllowance /
-                currentMontTotalDays) *
-                totalAbsent;
-            const otherDeduction =
-              item?.salary.currentSalary.providentFund -
-              (item?.salary.currentSalary.providentFund /
-                currentMontTotalDays) *
-                totalAbsent +
-              (item?.salary.currentSalary.professionalTax -
-                (item?.salary.currentSalary.professionalTax /
-                  currentMontTotalDays) *
-                  totalAbsent) +
-              (item?.salary.currentSalary.incomeTax -
-                (item?.salary.currentSalary.incomeTax / currentMontTotalDays) *
-                  totalAbsent);
+          const a = item?.salary.currentSalary;
+          const b = currentMontTotalDays;
+          const c = item.date.length;
+          const d = totalWeekHoliday.length;
+          const e = totalAbsent;
+          const f = filterHoliday.length;
+          const g = currentLeaveList.length;
+          let userSalary: any = {
+            basicSalary: calculateSalary(a.basicSalary, b, c, d, e, f, g),
+            hra: calculateSalary(a.hra, b, c, d, e, f, g),
+            travelAllowance: calculateSalary(
+              a.travelAllowance,
+              b,
+              c,
+              d,
+              e,
+              f,
+              g
+            ),
+            MedicalAllowance: calculateSalary(
+              a.MedicalAllowance,
+              b,
+              c,
+              d,
+              e,
+              f,
+              g
+            ),
+            LeaveTravelAllowance: calculateSalary(
+              a.LeaveTravelAllowance,
+              b,
+              c,
+              d,
+              e,
+              f,
+              g
+            ),
+            SpecialAllowance: calculateSalary(
+              a.SpecialAllowance,
+              b,
+              c,
+              d,
+              e,
+              f,
+              g
+            ),
+            providentFund: calculateSalary(a.providentFund, b, c, d, e, f, g),
+            incomeTax: calculateSalary(a.incomeTax, b, c, d, e, f, g),
+            professionalTax: a.professionalTax,
+            healthInsurance: a.healthInsurance,
+            ctc: a.ctc,
+          };
 
-            /////////////////////////////////////////////////////////////////////////////////////////////////
-            userSalary.basicSalary = basicSalary;
-            userSalary.hra = hra;
-            userSalary.travelAllowance = travelAllowance;
-            userSalary.MedicalAllowance = MedicalAllowance;
-            userSalary.LeaveTravelAllowance = LeaveTravelAllowance;
-            userSalary.SpecialAllowance = SpecialAllowance;
-
-            (userSalary.providentFund =
-              item?.salary.currentSalary.providentFund),
-              (userSalary.professionalTax =
-                item?.salary.currentSalary.professionalTax),
-              (userSalary.incomeTax = item?.salary.currentSalary.incomeTax);
-            userSalary.totalEarning =
-              basicSalary +
-              hra +
-              travelAllowance +
-              MedicalAllowance +
-              LeaveTravelAllowance +
-              SpecialAllowance -
-              (item?.salary.currentSalary.providentFund +
-                item?.salary.currentSalary.professionalTax +
-                item?.salary.currentSalary.incomeTax) -
-              otherDeduction;
-            userSalary.otherDeduction = otherDeduction;
-          }
+          userSalary.totalEarning =
+            userSalary.basicSalary +
+            userSalary.hra +
+            userSalary.travelAllowance +
+            userSalary.MedicalAllowance +
+            userSalary.LeaveTravelAllowance +
+            userSalary.SpecialAllowance -
+            userSalary.providentFund -
+            userSalary.incomeTax -
+            userSalary.professionalTax -
+            userSalary.healthInsurance;
 
           currentMonthPayroll.push({
             username: item._id,
-            date: moment(new Date()).format(),
-            currentMonthTotalLeave: totalLeave.length,
+            date: currentMonthYear,
+            present: item.date.length,
+            currentMonthTotalLeave: currentLeaveList.length,
             absent: totalAbsent,
             currentMonthTotalHoliday: filterHoliday.length,
             totalMonthDays: currentMontTotalDays,
@@ -284,7 +285,10 @@ const generatePayroll = async (req: Request, res: Response) => {
             salaryStatus: "pending",
             transactionNumber: null,
             transactionDate: null,
-            accountNumber: null,
+            accountNumber: item.bank.bankDetails.accountNumber,
+            bankName: item.bank.bankDetails.bankName,
+            ifsc: item.bank.bankDetails.ifsc,
+            branchName: item.bank.bankDetails.branchName,
             currentMonthSalary: userSalary,
           });
         });
@@ -311,15 +315,21 @@ const payrollUpdate = async (req: Request, res: Response) => {
     const reqData = Object.assign({}, req.body);
     const updateUserPayroll = await payroll.findOneAndUpdate(
       {
-        date: moment(reqData.date).format("YYYY-MM"),
+        date: reqData.date,
         "userPayroll._id": new mongoose.Types.ObjectId(reqData.payrollId),
       },
       {
         $set: {
-          "userPayroll.$.salaryStatus": reqData.status,
+          "userPayroll.$.salaryStatus": reqData.salaryStatus,
+          "userPayroll.$.currentMonthTotalLeave":
+            reqData.currentMonthTotalLeave,
+          "userPayroll.$.absent": reqData.absent,
+          "userPayroll.$.currentMonthTotalHoliday":
+            reqData.currentMonthTotalHoliday,
+          "userPayroll.$.totalWeekend": reqData.totalWeekend,
+          "userPayroll.$.currentMonthSalary": reqData.currentMonthSalary,
           "userPayroll.$.transactionNumber": reqData.transactionNumber,
           "userPayroll.$.transactionDate": reqData.transactionDate,
-          "userPayroll.$.accountNumber": reqData.accountNumber,
           "userPayroll.$.updatedBy": reqData.updatedBy,
           "userPayroll.$.updatedAt": moment(reqData.updatedAt).format(),
         },
@@ -338,26 +348,19 @@ const payrollUpdate = async (req: Request, res: Response) => {
 const payrollListMonthWise = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
-    const monthPayrollList = await payroll.aggregate([
-      {
-        $match: {
-          date: moment(reqData.date).format("YYYY-MM"),
-        },
-      },
-      {
-        $unwind: {
-          path: "$userPayroll",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $sort: { "userPayroll.salaryStatus": -1 },
-      },
-    ]);
 
-    res
-      .status(StatusCodes.OK)
-      .json({ message: "Data fetched successfully", data: monthPayrollList });
+    const monthPayrollList = await payroll.findOne({
+      date: moment(reqData.date).format("YYYY-MM"),
+    });
+    if (monthPayrollList) {
+      return res
+        .status(StatusCodes.OK)
+        .json({ message: "Data fetched successfully", data: monthPayrollList });
+    } else {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "Payroll not generated" });
+    }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
@@ -396,9 +399,101 @@ const singleUserPayrollList = async (req: Request, res: Response) => {
   }
 };
 
+const salarySlipGenerate = async (req: Request, res: Response) => {
+  try {
+    const userSalaryDetails = await payroll.aggregate([
+      {
+        $unwind: {
+          path: "$userPayroll",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          convertDate: {
+            $toDate: "$date",
+          },
+        },
+      },
+      {
+        $match: {
+          $expr: {
+            $and: [
+              {
+                $eq: [{ $year: "$convertDate" }, req.body.year],
+              },
+            ],
+          },
+          "userPayroll.username": req.body.username,
+          // "userPayroll.salaryStatus": "paid",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userPayroll.username",
+          foreignField: "username",
+          as: "userInfo",
+        },
+      },
+      {
+        $unwind: {
+          path: "$userInfo",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "user_salaries",
+          localField: "userPayroll.username",
+          foreignField: "username",
+          as: "salaryInfo",
+        },
+      },
+      {
+        $unwind: {
+          path: "$salaryInfo",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          userPayroll: 1,
+          "userInfo.document": 1,
+          "userInfo.position": 1,
+          "userInfo.email": 1,
+          "userInfo.name": 1,
+          "userInfo.dob": 1,
+          "userInfo.mobile": 1,
+          "salaryInfo.currentSalary": 1,
+        },
+      },
+    ]);
+
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: userSalaryDetails });
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+const salarySlipDownload = async (req: Request, res: Response) => {
+  try {
+    const result = salarySlipTemplate(req.body.data);
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Data fetched successfully", data: result });
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 export {
   generatePayroll,
   payrollUpdate,
   payrollListMonthWise,
   singleUserPayrollList,
+  salarySlipGenerate,
+  salarySlipDownload,
 };
