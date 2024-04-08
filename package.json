@@ -25,6 +25,7 @@
     "moment": "^2.29.4",
     "mongoose": "^7.6.3",
     "nanoid": "^3.3.4",
+    "socket.io": "^4.7.5",
     "validatorjs": "^3.22.1"
   },
   "devDependencies": {

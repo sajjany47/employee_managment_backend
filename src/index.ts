@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 import cors from "cors";
 import routes from "./routes/routes";
 import cookiesession from "cookie-session";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 function main() {
   const port = process.env.PORT || 8081;
@@ -13,6 +15,22 @@ function main() {
   // const corsOptions = {
   //   origin: "http://localhost:8081",
   // };
+  const server = createServer(app);
+  const io = new Server(server);
+
+  io.on("connection", (socket) => {
+    console.log(socket);
+
+    socket.on("sendNotification", (data) => {
+      console.log("Notification received:", data);
+
+      io.emit("receiveNotification", data);
+    });
+    socket.on("disconnect", () => {
+      console.log("A client disconnected");
+    });
+  });
+
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ limit: "30 mb", extended: true }));
   app.use(cors());
@@ -28,7 +46,7 @@ function main() {
     .connect(mongodb_url)
     .then(() => {
       console.log("Database Connected Successfully");
-      app.listen(port, () => {
+      server.listen(port, () => {
         console.log(`Server is running on port ${port}`);
       });
     })
