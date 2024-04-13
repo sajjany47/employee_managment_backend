@@ -4,12 +4,34 @@ import mongoose from "mongoose";
 import cors from "cors";
 import routes from "./routes/routes";
 import cookiesession from "cookie-session";
+import http from "http";
+import { Server } from "socket.io";
 
 function main() {
   const port = process.env.PORT || 8081;
   const mongodb_url: any = process.env.mongodb_url;
   const cookieSecretKey: any = process.env.COOKIE_SECRET;
   const app = express();
+  const server = http.createServer(app);
+
+  const io = new Server(server);
+
+  // Define Socket.IO event handlers
+  io.on("connection", (socket) => {
+    console.log("A user connected");
+
+    // Handle the 'chat message' event
+    socket.on("chat message", (msg) => {
+      console.log("message: " + msg);
+      // Broadcast the message to all connected clients
+      io.emit("chat message", msg);
+    });
+
+    // Handle disconnection
+    socket.on("disconnect", () => {
+      console.log("User disconnected");
+    });
+  });
   // const corsOptions = {
   //   origin: "http://localhost:8081",
   // };
@@ -28,7 +50,7 @@ function main() {
     .connect(mongodb_url)
     .then(() => {
       console.log("Database Connected Successfully");
-      app.listen(port, () => {
+      server.listen(port, () => {
         console.log(`Server is running on port ${port}`);
       });
     })
