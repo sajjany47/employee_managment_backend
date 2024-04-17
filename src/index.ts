@@ -12,6 +12,8 @@ function main() {
   const mongodb_url: any = process.env.mongodb_url;
   const cookieSecretKey: any = process.env.COOKIE_SECRET;
   const app = express();
+  const server = http.createServer(app);
+  const io = new Server(server);
 
   // const corsOptions = {
   //   origin: "http://localhost:8081",
@@ -27,11 +29,23 @@ function main() {
       httpOnly: true,
     })
   );
+
+  io.on("connection", (socket) => {
+    console.log("a user connected");
+
+    socket.on("chat message", (msg) => {
+      io.emit("chat message", msg);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("user disconnected");
+    });
+  });
   mongoose
     .connect(mongodb_url)
     .then(() => {
       console.log("Database Connected Successfully");
-      app.listen(port, () => {
+      server.listen(port, () => {
         console.log(`Server is running on port ${port}`);
       });
     })
