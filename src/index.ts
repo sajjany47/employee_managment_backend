@@ -45,14 +45,40 @@ function main() {
   io.on("connection", (socket) => {
     console.log("a user connected", socket.id);
 
-    socket.on("message", (msg) => {
-      console.log(msg);
-      io.emit("receive-message", msg);
+    socket.on("setup", (userData) => {
+      console.log(userData._id);
+      socket.join(userData._id);
+      socket.emit("connected");
     });
 
-    socket.on("disconnect", () => {
-      console.log("user disconnected", socket.id);
+    socket.on("join chat", (room) => {
+      socket.join(room);
+      console.log("User Joined Room: " + room);
     });
+
+    socket.on("new message", (newMessageReceived) => {
+      var chat = newMessageReceived.chat;
+      if (!chat.users) return console.log("chat.users not defined");
+
+      chat.users.forEach((user: any) => {
+        if (user._id == newMessageReceived.sender._id) return;
+        socket.in(user._id).emit("message recieved", newMessageReceived);
+      });
+    });
+
+    socket.off("setup", (userData) => {
+      console.log("USER DISCONNECTED");
+      socket.leave(userData._id);
+    });
+
+    // socket.on("message", (msg) => {
+    //   console.log(msg);
+    //   io.emit("receive-message", msg);
+    // });
+
+    // socket.on("disconnect", () => {
+    //   console.log("user disconnected", socket.id);
+    // });
   });
   mongoose
     .connect(mongodb_url)
