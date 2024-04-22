@@ -32,7 +32,7 @@ const sendMessage = async (req: Request, res: Response) => {
 
       return res
         .status(StatusCodes.OK)
-        .json({ message: "Message sent successfully" });
+        .json({ message: "Message sent successfully", data: updateMessage });
     } else {
       const sendData = new chat({
         sender: reqData.user.username,
