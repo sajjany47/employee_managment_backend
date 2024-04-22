@@ -41,44 +41,40 @@ function main() {
       httpOnly: true,
     })
   );
+  // Store users and their sockets
+  const users: any = {};
 
   io.on("connection", (socket) => {
-    console.log("a user connected", socket.id);
+    console.log("New connection:", socket.id);
 
-    socket.on("setup", (userData) => {
-      console.log(userData._id);
-      socket.join(userData._id);
-      socket.emit("connected");
+    socket.on("user:join", (username) => {
+      users[username] = socket.id;
+      console.log(`User ${username} joined with socket ID ${socket.id}`);
     });
+    socket.on("message:send", (data) => {
+      const { recipient, message, sender } = data;
+      const recipientSocketId = users[recipient];
 
-    socket.on("join chat", (room) => {
-      socket.join(room);
-      console.log("User Joined Room: " + room);
+      if (recipientSocketId) {
+        // Recipient is online
+        io.to(recipientSocketId).emit("message:receive", { message, sender });
+      } else {
+        // Store message for offline users (in a real-world scenario, you'd use a database)
+        console.log(
+          `User ${recipient} is offline. Message from ${sender}: ${message}`
+        );
+      }
     });
-
-    socket.on("new message", (newMessageReceived) => {
-      var chat = newMessageReceived.chat;
-      if (!chat.users) return console.log("chat.users not defined");
-
-      chat.users.forEach((user: any) => {
-        if (user._id == newMessageReceived.sender._id) return;
-        socket.in(user._id).emit("message recieved", newMessageReceived);
-      });
+    socket.on("disconnect", () => {
+      // Remove user from users object on disconnect
+      for (const username in users) {
+        if (users[username] === socket.id) {
+          delete users[username];
+          console.log(`User ${username} disconnected`);
+          break;
+        }
+      }
     });
-
-    socket.off("setup", (userData) => {
-      console.log("USER DISCONNECTED");
-      socket.leave(userData._id);
-    });
-
-    // socket.on("message", (msg) => {
-    //   console.log(msg);
-    //   io.emit("receive-message", msg);
-    // });
-
-    // socket.on("disconnect", () => {
-    //   console.log("user disconnected", socket.id);
-    // });
   });
   mongoose
     .connect(mongodb_url)
