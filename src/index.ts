@@ -41,39 +41,22 @@ function main() {
       httpOnly: true,
     })
   );
-  // Store users and their sockets
-  const users: any = {};
 
   io.on("connection", (socket) => {
-    console.log("New connection:", socket.id);
+    console.log("A user connected");
 
-    socket.on("user:join", (username) => {
-      users[username] = socket.id;
-      console.log(`User ${username} joined with socket ID ${socket.id}`);
+    socket.on("joinRoom", (user) => {
+      socket.join(user.room);
     });
-    socket.on("message:send", (data) => {
-      const { recipient, message, sender } = data;
-      const recipientSocketId = users[recipient];
 
-      if (recipientSocketId) {
-        // Recipient is online
-        io.to(recipientSocketId).emit("message:receive", { message, sender });
-      } else {
-        // Store message for offline users (in a real-world scenario, you'd use a database)
-        console.log(
-          `User ${recipient} is offline. Message from ${sender}: ${message}`
-        );
-      }
+    socket.on("sendMessage", async (message) => {
+      console.log(message);
+      // ... (same as previous snippet)
+      socket.to(message.receiver).emit("receiveMessage", message);
     });
+
     socket.on("disconnect", () => {
-      // Remove user from users object on disconnect
-      for (const username in users) {
-        if (users[username] === socket.id) {
-          delete users[username];
-          console.log(`User ${username} disconnected`);
-          break;
-        }
-      }
+      console.log("A user disconnected");
     });
   });
   mongoose
