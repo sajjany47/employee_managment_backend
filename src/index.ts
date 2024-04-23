@@ -50,7 +50,6 @@ function main() {
     });
 
     socket.on("sendMessage", async (message) => {
-      console.log(message);
       // ... (same as previous snippet)
       socket.to(message.receiver).emit("receiveMessage", message);
     });
