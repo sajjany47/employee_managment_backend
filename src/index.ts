@@ -43,8 +43,6 @@ function main() {
   );
 
   io.on("connection", (socket) => {
-    console.log("A user connected");
-
     socket.on("joinRoom", (user) => {
       socket.join(user.room);
     });
@@ -61,7 +59,6 @@ function main() {
   mongoose
     .connect(mongodb_url)
     .then(() => {
-      console.log("Database Connected Successfully");
       server.listen(port, () => {
         console.log(`Server is running on port ${port}`);
       });
