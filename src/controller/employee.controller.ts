@@ -8,7 +8,7 @@ const employeeList = async (req: Request, res: Response) => {
     const emplpoyeeListData = await user
       .find(
         {
-          registrationStatus: "verified",
+          activeStatus: true,
         },
         { username: 1, name: 1 }
       )
