@@ -367,6 +367,9 @@ const userDatatTable = async (req: Request, res: Response) => {
         activeStatus: { $regex: `^${reqData.activeStatus}`, $options: "i" },
       });
     }
+    if (reqData.hasOwnProperty("registrationStatus")) {
+      query.push({ registrationStatus: reqData.registrationStatus });
+    }
     const data: any[] = await Promise.all([
       user.countDocuments([
         { $match: query.length > 0 ? { $and: query } : {} },
