@@ -314,8 +314,6 @@ const activeStatus = async (req: Request, res: Response) => {
         {
           activeStatus: req.body.activeStatus,
           updatedBy: req.body.updatedBy,
-          // approvedBy: req.body.approvedBy,
-          // registrationStatus: "approved",
         }
       );
       return res
@@ -333,19 +331,65 @@ const userDatatTable = async (req: Request, res: Response) => {
     const page = reqData.page;
     const limit = reqData.limit;
     const start = page * limit - limit;
-    const search = {
-      name: { $regex: `^${reqData.search.name}`, $options: "i" },
-      username: { $regex: `^${reqData.search.username}`, $options: "i" },
-      mobile: { $regex: `^${reqData.search.mobile}`, $options: "i" },
-    };
-    const searchDataTable = await user.aggregate([
-      { $match: reqData?.search ? search : {} },
-      { $skip: start },
-      { $limit: limit },
+    const query: any[] = [];
+    if (reqData.hasOwnProperty("name")) {
+      query.push({ name: { $regex: `^${reqData.name}`, $options: "i" } });
+    }
+    if (reqData.hasOwnProperty("username")) {
+      query.push({ username: reqData.username });
+    }
+    if (reqData.hasOwnProperty("mobile")) {
+      query.push({ mobile: reqData.mobile });
+    }
+    if (reqData.hasOwnProperty("activationCode")) {
+      query.push({ activationCode: reqData.activationCode });
+    }
+    if (reqData.hasOwnProperty("role")) {
+      query.push({
+        role: { $regex: `^${reqData.role}`, $options: "i" },
+      });
+    }
+    if (reqData.hasOwnProperty("email")) {
+      query.push({ email: reqData.email });
+    }
+    if (reqData.hasOwnProperty("position")) {
+      query.push({
+        position: { $regex: `^${reqData.position}`, $options: "i" },
+      });
+    }
+    if (reqData.hasOwnProperty("state")) {
+      query.push({
+        state: { $regex: `^${reqData.state}`, $options: "i" },
+      });
+    }
+    if (reqData.hasOwnProperty("activeStatus")) {
+      query.push({
+        activeStatus: { $regex: `^${reqData.activeStatus}`, $options: "i" },
+      });
+    }
+    const data: any[] = await Promise.all([
+      user.countDocuments([
+        { $match: query.length > 0 ? { $and: query } : {} },
+      ]),
+      user.aggregate([
+        { $match: query.length > 0 ? { $and: query } : {} },
+        {
+          $sort: reqData.hasOwnProperty("sort")
+            ? reqData.sort
+            : {
+                name: 1,
+              },
+        },
+        { $skip: start },
+        { $limit: limit },
+      ]),
     ]);
-    res
-      .status(StatusCodes.OK)
-      .json({ message: "Data fetched successfully", data: searchDataTable });
+
+    res.status(StatusCodes.OK).json({
+      message: "Data fetched successfully",
+      data: data[1],
+      count: data[0],
+    });
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
