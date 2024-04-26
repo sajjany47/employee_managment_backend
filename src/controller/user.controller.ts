@@ -357,19 +357,28 @@ const userDatatTable = async (req: Request, res: Response) => {
         position: { $regex: `^${reqData.position}`, $options: "i" },
       });
     }
+    if (reqData.hasOwnProperty("country")) {
+      query.push({
+        country: { $regex: `^${reqData.country}`, $options: "i" },
+      });
+    }
     if (reqData.hasOwnProperty("state")) {
       query.push({
         state: { $regex: `^${reqData.state}`, $options: "i" },
       });
     }
-    if (reqData.hasOwnProperty("activeStatus")) {
+    if (reqData.hasOwnProperty("registrationStatus")) {
       query.push({
-        activeStatus: { $regex: `^${reqData.activeStatus}`, $options: "i" },
+        registrationStatus: {
+          $regex: `^${reqData.registrationStatus}`,
+          $options: "i",
+        },
       });
     }
-    if (reqData.hasOwnProperty("registrationStatus")) {
-      query.push({ registrationStatus: reqData.registrationStatus });
+    if (reqData.hasOwnProperty("activeStatus")) {
+      query.push({ activeStatus: reqData.activeStatus });
     }
+
     const data: any[] = await Promise.all([
       user.countDocuments([
         { $match: query.length > 0 ? { $and: query } : {} },
