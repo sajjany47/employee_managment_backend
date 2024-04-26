@@ -5,6 +5,8 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 import mongoose from "mongoose";
+import leave from "../model/leave.model";
+import moment from "moment";
 
 const generateActivationKey = async (req: Request, res: Response) => {
   try {
@@ -80,6 +82,23 @@ const generateActivationKey = async (req: Request, res: Response) => {
         registrationStatus: "waiting",
       });
       const saveUser = await userData.save();
+
+      const createLeaveList = new leave({
+        user_id: reqData.username,
+        leaveDetail: [
+          {
+            leaveYear: moment(new Date()).format("YYYY"),
+            totalLeaveLeft: (12 - (moment().month() + 1)) * 2,
+            totalLeave: (12 - (moment().month() + 1)) * 2,
+            leaveUseDetail: [],
+            updatedBy: reqData.createdBy,
+          },
+        ],
+
+        createdBy: reqData.createdBy,
+      });
+
+      await createLeaveList.save();
       res.status(StatusCodes.OK).json({
         message: "Activation key created successfully",
         activationKey: saveUser.activationCode,
