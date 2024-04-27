@@ -39,7 +39,7 @@ const generateActivationKey = async (req: Request, res: Response) => {
         role: reqData.role,
         password: await bcrypt.hash(reqData.password, 10),
         activationCode: activationKey,
-        position: null,
+        position: reqData.position,
         skill: null,
         address: null,
         state: null,
@@ -75,9 +75,9 @@ const generateActivationKey = async (req: Request, res: Response) => {
           ifsc: null,
           branchName: null,
         },
-        createdBy: reqData.createdBy,
+        createdBy: reqData.user.username,
         updatedBy: null,
-        approvedBy: reqData.approvedBy,
+        approvedBy: reqData.user.username,
         activeStatus: true,
         registrationStatus: "waiting",
       });
@@ -153,6 +153,7 @@ const checkActivationKey = async (req: Request, res: Response) => {
 const userUpdate = async (req: Request, res: Response) => {
   try {
     const reqData: any = Object.assign({}, req.body);
+
     const validUser = await user.findOne({
       activationCode: reqData.activationCode,
     });
@@ -175,9 +176,15 @@ const userUpdate = async (req: Request, res: Response) => {
         workDetail: reqData.workDetail,
         document: reqData.document,
         bankDetails: reqData.bankDetails,
-        registrationStatus: "pending",
+        registrationStatus:
+          reqData.user.role === "admin" || reqData.user.role === "hr"
+            ? "verified"
+            : "pending",
         updatedBy: reqData.updatedBy,
-        approvedBy: null,
+        approvedBy:
+          reqData.user.role === "admin" || reqData.user.role === "hr"
+            ? reqData.user.username
+            : null,
         activeStatus: true,
       };
 
@@ -293,7 +300,11 @@ const login = async (req: Request, res: Response) => {
 
           const scretKey: any = process.env.secret_Key;
           const token = jwt.sign(
-            { _id: checkUser._id, username: checkUser.username },
+            {
+              _id: checkUser._id,
+              username: checkUser.username,
+              role: checkUser.role,
+            },
             scretKey,
             {
               expiresIn: "6h",
@@ -332,7 +343,7 @@ const activeStatus = async (req: Request, res: Response) => {
         { username: req.body.username },
         {
           activeStatus: req.body.activeStatus,
-          updatedBy: req.body.updatedBy,
+          updatedBy: req.body.user.username,
         }
       );
       return res
@@ -435,7 +446,7 @@ const userVerified = async (req: Request, res: Response) => {
       await user.updateOne(
         { activationCode: req.body.activationCode },
         {
-          approvedBy: req.body.approvedBy,
+          approvedBy: req.body.user.username,
           registrationStatus: req.body.registrationStatus,
         }
       );
