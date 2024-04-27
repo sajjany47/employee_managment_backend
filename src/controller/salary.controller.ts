@@ -136,6 +136,15 @@ const salaryUserAlloted = async (req: Request, res: Response) => {
 const salaryList = async (req: Request, res: Response) => {
   try {
     const allotedSalaryList = await salary.find({});
+    const reqData = req.body;
+    const page = reqData.page;
+    const limit = reqData.limit;
+    const start = page * limit - limit;
+    const query: any[] = [];
+
+    if (reqData.hasOwnProperty("username")) {
+      query.push({ username: reqData.username });
+    }
 
     res.status(StatusCodes.OK).json({
       message: "Data fetched successfully",
