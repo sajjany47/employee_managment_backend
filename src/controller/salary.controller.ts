@@ -142,7 +142,9 @@ const salaryList = async (req: Request, res: Response) => {
     const query: any[] = [];
 
     if (reqData.hasOwnProperty("username")) {
-      query.push({ username: reqData.username });
+      query.push({
+        username: { $regex: `^${reqData.username}`, $options: "i" },
+      });
     }
 
     const data: any[] = await Promise.all([
