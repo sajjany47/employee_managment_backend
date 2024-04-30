@@ -648,20 +648,45 @@ const attendanceList = async (req: Request, res: Response) => {
         },
       },
       {
-        $project: {
-          _id: 0,
-          username: 1,
-          "timeSchedule.updatedBy": 1,
-          "timeSchedule._id": 1,
-          "timeSchedule.date": 1,
-          "timeSchedule.totalTime": 1,
-          "timeSchedule.startTime": 1,
-          "timeSchedule.endTime": 1,
+        $lookup: {
+          from: "leavelists",
+          localField: "username",
+          foreignField: "user_id",
+          as: "leave",
         },
       },
       {
-        $sort: {
-          "timeSchedule.date": -1,
+        $unwind: {
+          path: "$leave",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$leave.leaveDetail",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          "leave.leaveDetail.leaveYear": `${year}`,
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          username: { $first: "$username" },
+          totalLeave: {
+            $first: "$leave.leaveDetail.totalLeave",
+          },
+          totalLeaveLeft: {
+            $first: "$leave.leaveDetail.totalLeaveLeft",
+          },
+          date: { $first: `${moment(req.body.date).format("YYYY-MM")}` },
+          timeSchedule: { $push: "$timeSchedule" },
+          totalTime: {
+            $sum: "$timeSchedule.totalTime",
+          },
         },
       },
     ]);
