@@ -90,7 +90,7 @@ routes
   .route("/user-invalid-attendance/details")
   .get(auth, userInvalidAttendance);
 routes.route("/invalid-attendance/change").post(auth, inValidAttendanceChange);
-routes.route("/time-record/list").post(attendanceList);
+routes.route("/time-record/list").post(auth, attendanceList);
 routes.route("/salary/structure-create").post(auth, userSalaryCreate);
 routes.route("/salary/user-list").get(auth, salaryUserAlloted);
 routes.route("/salary/list").post(auth, salaryList);
