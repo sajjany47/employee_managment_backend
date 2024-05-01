@@ -617,8 +617,25 @@ const attendanceList = async (req: Request, res: Response) => {
   try {
     const year = moment(req.body.date).format("YYYY");
     const month = moment(req.body.date).format("MM");
+    const reqData = req.body;
+    const page = reqData.page;
+    const limit = reqData.limit;
+    const start = page * limit - limit;
+    const query: any[] = [];
 
+    if (reqData.hasOwnProperty("username")) {
+      query.push({ username: { $regex: `^${reqData.username}` } });
+    }
     const result = await timeRecord.aggregate([
+      {
+        $match: query.length > 0 ? { $and: query } : {},
+      },
+      {
+        $skip: start,
+      },
+      {
+        $limit: limit,
+      },
       {
         $unwind: {
           path: "$timeSchedule",
