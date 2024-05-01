@@ -624,7 +624,9 @@ const attendanceList = async (req: Request, res: Response) => {
     const query: any[] = [];
 
     if (reqData.hasOwnProperty("username")) {
-      query.push({ username: { $regex: `^${reqData.username}` } });
+      query.push({
+        username: { $regex: `^${reqData.username}`, $options: "i" },
+      });
     }
     const result = await timeRecord.aggregate([
       {
