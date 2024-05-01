@@ -6,6 +6,8 @@ import routes from "./routes/routes";
 import cookiesession from "cookie-session";
 import { Server } from "socket.io";
 import { createServer } from "http";
+import cron from "node-cron";
+import { generatePayrollMonthly } from "./utility/utility";
 
 function main() {
   const port = process.env.PORT || 8081;
@@ -61,6 +63,9 @@ function main() {
     .then(() => {
       server.listen(port, () => {
         console.log(`Server is running on port ${port}`);
+      });
+      cron.schedule("0 0 1 * *", () => {
+        generatePayrollMonthly(new Date());
       });
     })
     .catch((e: any) => console.log(e));
