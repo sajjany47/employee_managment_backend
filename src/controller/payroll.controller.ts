@@ -329,9 +329,9 @@ const payrollUpdate = async (req: Request, res: Response) => {
           "userPayroll.$.totalWeekend": reqData.totalWeekend,
           "userPayroll.$.currentMonthSalary": reqData.currentMonthSalary,
           "userPayroll.$.transactionNumber": reqData.transactionNumber,
-          "userPayroll.$.transactionDate": reqData.transactionDate,
-          "userPayroll.$.updatedBy": reqData.updatedBy,
-          "userPayroll.$.updatedAt": moment(reqData.updatedAt).format(),
+          "userPayroll.$.transactionDate": new Date(reqData.transactionDate),
+          "userPayroll.$.updatedBy": reqData.user.username,
+          "userPayroll.$.updatedAt": new Date(),
         },
       }
     );
