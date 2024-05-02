@@ -95,8 +95,23 @@ const getNewUserList = async (req: Request, res: Response) => {
 
 const leaveList = async (req: Request, res: Response) => {
   try {
-    const id = req.params.id;
+    const reqData = req.body;
+    const page = reqData.page;
+    const limit = reqData.limit;
+    const start = page * limit - limit;
+    const year = reqData.year;
+    const query = [];
+
+    if (reqData.hasOwnProperty("username")) {
+      query.push({
+        user_id: { $regex: `^${reqData.username}`, $options: "i" },
+      });
+    }
+
     const findLeaveList = await leave.aggregate([
+      {
+        $match: query.length > 0 ? { $and: query } : {},
+      },
       {
         $unwind: {
           path: "$leaveDetail",
@@ -104,8 +119,14 @@ const leaveList = async (req: Request, res: Response) => {
       },
       {
         $match: {
-          "leaveDetail.leaveYear": id,
+          "leaveDetail.leaveYear": year,
         },
+      },
+      {
+        $skip: start,
+      },
+      {
+        $limit: limit,
       },
     ]);
 

@@ -77,7 +77,7 @@ routes.route("/create-holiday").post(auth, createHolidayList);
 routes.route("/delete-holiday").post(auth, deleteHolidayList);
 routes.route("/single-user/leave-create").post(auth, leaveAlloted);
 routes.route("/userlist/leave/:year").get(auth, getNewUserList);
-routes.route("/leave-alloted-list/:id").get(auth, leaveList);
+routes.route("/leave-alloted-list").post(auth, leaveList);
 routes.route("/leave-apply").post(auth, leaveApply);
 routes.route("/leave-apply-list").post(auth, applyLeaveList);
 routes.route("/leave-apply-list/:year").get(auth, userApplyLeaveList);
