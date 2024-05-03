@@ -23,7 +23,7 @@ const holidayListData = async (req: Request, res: Response) => {
       { $unwind: "$holidayList" },
       {
         $sort: {
-          "holidayList.holidayDate": 1,
+          "holidayList.holidayDate": -1,
         },
       },
     ]);
@@ -66,7 +66,7 @@ const createHolidayList = async (req: Request, res: Response) => {
               holidayList: {
                 holidayDate: moment(reqData.holidayDate).format("YYYY-MM-DD"),
                 reason: reqData.reason,
-                createdBy: reqData.createdBy,
+                createdBy: reqData.user.username,
               },
             },
           }
@@ -83,7 +83,7 @@ const createHolidayList = async (req: Request, res: Response) => {
         holidayList: {
           holidayDate: moment(reqData.holidayDate).format("YYYY-MM-DD"),
           reason: reqData.reason,
-          createdBy: reqData.createdBy,
+          createdBy: reqData.user.username,
         },
       });
 
