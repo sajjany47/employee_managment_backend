@@ -464,6 +464,7 @@ const userVerified = async (req: Request, res: Response) => {
 const singleUser = async (req: Request, res: Response) => {
   try {
     const id = req.params;
+
     const findUser: any = await user.findOne(
       { _id: new mongoose.Types.ObjectId(id.id) },
       { password: 0 }
