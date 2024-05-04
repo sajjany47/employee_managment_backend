@@ -7,6 +7,8 @@ import { nanoid } from "nanoid";
 import mongoose from "mongoose";
 import leave from "../model/leave.model";
 import moment from "moment";
+import nodeMailer from "nodemailer";
+import { registerTemplate } from "../utility/template";
 
 const generateActivationKey = async (req: Request, res: Response) => {
   try {
@@ -99,6 +101,29 @@ const generateActivationKey = async (req: Request, res: Response) => {
       });
 
       await createLeaveList.save();
+
+      const transporter = nodeMailer.createTransport({
+        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: "sajjany47@gmail.com",
+          pass: "nvowbgnslehjkkif",
+        },
+      });
+
+      await transporter.sendMail({
+        from: " <sajjany47@gmail.com>", // sender address
+        to: reqData.email, // list of receivers
+        subject: "Your account has been successfully created", // Subject line
+        // text: activationKey, // plain text body
+        html: registerTemplate({
+          username: reqData.username,
+          password: reqData.password,
+        }), // html body
+      });
+
       res.status(StatusCodes.OK).json({
         message: "Activation key created successfully",
         activationKey: saveUser.activationCode,
