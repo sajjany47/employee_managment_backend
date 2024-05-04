@@ -512,6 +512,11 @@ const salarySlipGenerate = async (req: Request, res: Response) => {
           "salaryInfo.currentSalary": 1,
         },
       },
+      {
+        $sort: {
+          "userPayroll.date": -1,
+        },
+      },
     ]);
 
     res
