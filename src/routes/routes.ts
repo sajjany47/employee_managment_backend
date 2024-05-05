@@ -2,12 +2,13 @@ import express from "express";
 import {
   activationKeyList,
   activeStatus,
+  adminChangePassword,
   checkActivationKey,
-  forgetPassword,
   generateActivationKey,
   login,
   singleUser,
   userDatatTable,
+  userPasswordChange,
   userUpdate,
   userVerified,
 } from "../controller/user.controller";
@@ -68,7 +69,8 @@ routes.route("/check-activation-key").post(checkActivationKey);
 routes.route("/user-update").post(auth, userUpdate);
 routes.route("/user-verified").post(auth, userVerified);
 routes.route("/single-user/:id").get(auth, singleUser);
-routes.route("/forget-password").post(forgetPassword);
+routes.route("/admin-change-password").post(auth, adminChangePassword);
+routes.route("/user-change-password").post(auth, userPasswordChange);
 routes.route("/change-status").post(auth, activeStatus);
 routes.route("/activation-key-list/:id").get(auth, activationKeyList);
 routes.route("/employee-list").get(auth, employeeList);

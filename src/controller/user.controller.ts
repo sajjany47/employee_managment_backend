@@ -9,6 +9,7 @@ import leave from "../model/leave.model";
 import moment from "moment";
 import nodeMailer from "nodemailer";
 import { registerTemplate } from "../utility/template";
+import { request } from "http";
 
 const generateActivationKey = async (req: Request, res: Response) => {
   try {
@@ -266,24 +267,24 @@ const userUpdate = async (req: Request, res: Response) => {
   }
 };
 
-const forgetPassword = async (req: Request, res: Response) => {
+const adminChangePassword = async (req: Request, res: Response) => {
   try {
-    const reqData: any = Object.assign({}, req.body);
-    const validUser = await user.findOne({
-      $or: [
-        { username: reqData.userId },
-        { email: reqData.userId },
-        { mobile: reqData.userId },
-      ],
+    const findUser: any = await user.findOne({
+      _id: new mongoose.Types.ObjectId(req.body._id),
     });
-    if (validUser) {
-      validUser.password = await bcrypt.hash(reqData.password, 10);
-      validUser.save();
-      res
+    if (findUser) {
+      const updateData = await user.updateOne(
+        { _id: new mongoose.Types.ObjectId(req.body._id) },
+        { $set: { password: await bcrypt.hash(req.body.newPassword, 10) } }
+      );
+
+      return res
         .status(StatusCodes.OK)
-        .json({ message: "Password change successfully" });
+        .json({ message: "Password updated successfully" });
     } else {
-      res.status(StatusCodes.NOT_FOUND).json({ message: "User not found" });
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "User not found" });
     }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
@@ -302,10 +303,7 @@ const login = async (req: Request, res: Response) => {
     });
 
     if (checkUser) {
-      if (
-        checkUser.activeStatus === true &&
-        checkUser.registrationStatus === "verified"
-      ) {
+      if (checkUser.activeStatus === true) {
         const verifyPassword = await bcrypt.compare(
           reqData.password,
           checkUser.password
@@ -502,9 +500,43 @@ const singleUser = async (req: Request, res: Response) => {
   }
 };
 
+const userPasswordChange = async (req: Request, res: Response) => {
+  try {
+    const findUser: any = await user.findOne({
+      _id: new mongoose.Types.ObjectId(req.body._id),
+    });
+    if (findUser) {
+      const verifiedOldPassword = await bcrypt.compare(
+        req.body.oldPassword,
+        findUser.password
+      );
+      if (verifiedOldPassword) {
+        const updateData = await user.updateOne(
+          { _id: new mongoose.Types.ObjectId(req.body._id) },
+          { $set: { password: await bcrypt.hash(req.body.newPassword, 10) } }
+        );
+
+        return res
+          .status(StatusCodes.OK)
+          .json({ message: "Password updated successfully" });
+      } else {
+        return res
+          .status(StatusCodes.UNAUTHORIZED)
+          .json({ message: "Old password is not matched" });
+      }
+    } else {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "User not found" });
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 export {
   generateActivationKey,
-  forgetPassword,
+  adminChangePassword,
   userUpdate,
   checkActivationKey,
   login,
@@ -513,4 +545,5 @@ export {
   userDatatTable,
   userVerified,
   singleUser,
+  userPasswordChange,
 };
