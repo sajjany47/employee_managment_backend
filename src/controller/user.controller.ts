@@ -108,8 +108,8 @@ const generateActivationKey = async (req: Request, res: Response) => {
         port: 587,
         secure: false,
         auth: {
-          user: "sajjany47@gmail.com",
-          pass: "nvowbgnslehjkkif",
+          user: process.env.USER,
+          pass: process.env.USER_PASSWORD,
         },
       });
 
