@@ -412,6 +412,50 @@ const userApplyLeaveApproved = async (req: Request, res: Response) => {
   }
 };
 
+const excelLeaveAllot = async (req: Request, res: Response) => {
+  try {
+    const checkValidUser = await user.aggregate([
+      {
+        $match: {
+          username: {
+            $in: ["sajjany47", "sajjan", "ujjwal123"],
+          },
+        },
+      },
+      {
+        $project: {
+          username: 1,
+        },
+      },
+      {
+        $lookup: {
+          from: "leavelists",
+          localField: "username",
+          foreignField: "user_id",
+          as: "leave",
+        },
+      },
+      {
+        $unwind: {
+          path: "$leave",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$leave.leaveDetail",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          "leave.leaveDetail.leaveYear": "2024",
+        },
+      },
+    ]);
+  } catch (error) {}
+};
+
 export {
   leaveAlloted,
   getNewUserList,
