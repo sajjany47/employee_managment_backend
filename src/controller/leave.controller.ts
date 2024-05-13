@@ -414,11 +414,12 @@ const userApplyLeaveApproved = async (req: Request, res: Response) => {
 
 const excelLeaveAllot = async (req: Request, res: Response) => {
   try {
+    const userArray = req.body.list.map((item: any) => item.username);
     const checkValidUser = await user.aggregate([
       {
         $match: {
           username: {
-            $in: ["sajjany47", "sajjan", "ujjwal123"],
+            $in: userArray,
           },
         },
       },
@@ -449,11 +450,41 @@ const excelLeaveAllot = async (req: Request, res: Response) => {
       },
       {
         $match: {
-          "leave.leaveDetail.leaveYear": "2024",
+          "leave.leaveDetail.leaveYear": req.body.list[0].year,
         },
       },
     ]);
-  } catch (error) {}
+    if (checkValidUser.length > 0) {
+      return res
+        .status(StatusCodes.CONFLICT)
+        .json({ message: "User already leave alloted", data: checkValidUser });
+    } else {
+      req.body.list.forEach((item: any) => {
+        const insertLeave = leave.updateOne(
+          { user_id: item.username },
+          {
+            $push: {
+              leaveDetail: {
+                leaveYear: moment(item.year).format("YYYY"),
+                totalLeaveLeft: item.leave,
+                totalLeave: item.leave,
+                leaveUseDetail: [],
+                updatedBy: req.body.user.username,
+              },
+            },
+          }
+        );
+      });
+
+      res.status(StatusCodes.OK).json({
+        message: `Current Year (${moment(req.body.list[0].year).format(
+          "YYYY"
+        )}) leave Allocated successfully`,
+      });
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
 };
 
 export {
@@ -465,4 +496,5 @@ export {
   applyLeaveList,
   userApplyLeaveList,
   userApplyLeaveApproved,
+  excelLeaveAllot,
 };

@@ -32,6 +32,7 @@ import {
 import {
   applyLeaveList,
   editLeaveAlloctated,
+  excelLeaveAllot,
   getNewUserList,
   leaveAlloted,
   leaveApply,
@@ -85,6 +86,7 @@ routes.route("/leave-apply-list").post(auth, applyLeaveList);
 routes.route("/leave-apply-list/:year").get(auth, userApplyLeaveList);
 routes.route("/leave-approved").post(auth, userApplyLeaveApproved);
 routes.route("/leave-alloted/edit").post(auth, editLeaveAlloctated);
+routes.route("/excel/leave-alloted").post(auth, excelLeaveAllot);
 routes.route("/time-record").post(auth, userTimeData);
 routes.route("/date-check").post(auth, userDailyCheck);
 routes.route("/user-attendance/details").post(auth, userAttendanceDetails);
