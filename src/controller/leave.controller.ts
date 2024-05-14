@@ -473,9 +473,11 @@ const excelLeaveAllot = async (req: Request, res: Response) => {
       } else {
         let leaveInsert: any = [];
         leave.forEach((item) => {
+          let username = "";
           let modifyLeave = item.leaveDetail;
           list.forEach((elm: any) => {
             if (elm.username === item.user_id) {
+              username = item.user_id;
               modifyLeave.push({
                 leaveYear: elm.year,
                 totalLeaveLeft: `${elm.leave}`,
@@ -485,10 +487,8 @@ const excelLeaveAllot = async (req: Request, res: Response) => {
               });
             }
           });
-          leaveInsert.push(modifyLeave);
+          leaveInsert.push({ user_id: username, leaveDetail: modifyLeave });
         });
-
-        console.log(leaveInsert);
       }
     }
   } catch (error: any) {
