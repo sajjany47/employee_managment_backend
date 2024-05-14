@@ -416,51 +416,34 @@ const excelLeaveAllot = async (req: Request, res: Response) => {
   try {
     const list = req.body.list;
     const userArray: any = req.body.list.map((item: any) => item.username);
-    const checkValidUser = await user.aggregate([
+
+    const checkValidUser = await user.find(
       {
-        $match: {
-          username: {
-            $in: userArray,
-          },
-        },
+        username: { $in: userArray },
+        activeStatus: true,
       },
-      {
-        $project: {
-          username: 1,
-        },
-      },
-      {
-        $lookup: {
-          from: "leavelists",
-          localField: "username",
-          foreignField: "user_id",
-          as: "leave",
-        },
-      },
-      {
-        $unwind: {
-          path: "$leave",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-    ]);
-    const invaliUser = list.filter(
+      { username: 1 }
+    );
+
+    const invalidUser = list.filter(
       (item1: any) =>
         !checkValidUser.some((item2) => item2.username === item1.username)
     );
-
-    if (invaliUser.length > 0) {
+    if (invalidUser.length > 0) {
       return res
         .status(StatusCodes.NOT_FOUND)
-        .json({ message: "user not found!", data: invaliUser });
+        .json({ message: "User not found!", data: invalidUser });
     } else {
-      const leave = checkValidUser.map((item: any) => item.leave);
+      const checkValidYear = await leave.find({
+        user_id: { $in: userArray },
+      });
+
       let invalidYear: any = [];
-      leave.forEach((elm) => {
+      checkValidYear.forEach((elm) => {
         const invalid = list.filter(
           (item1: any) =>
             !elm.leaveDetail.some(
-              (item2: any) => item2.leaveYear !== item1.year
+              (item2: any) => item2.leaveYear !== `${item1.year}`
             )
         );
         invalidYear = invalid;
@@ -469,28 +452,86 @@ const excelLeaveAllot = async (req: Request, res: Response) => {
       if (invalidYear.length > 0) {
         return res
           .status(StatusCodes.CONFLICT)
-          .json({ message: "User leave already allloted", data: invalidYear });
+          .json({ message: "Leave already allot", data: invalidYear });
       } else {
-        let leaveInsert: any = [];
-        leave.forEach((item) => {
-          let username = "";
-          let modifyLeave = item.leaveDetail;
-          list.forEach((elm: any) => {
-            if (elm.username === item.user_id) {
-              username = item.user_id;
-              modifyLeave.push({
-                leaveYear: elm.year,
-                totalLeaveLeft: `${elm.leave}`,
-                totalLeave: `${elm.leave}`,
-                leaveUseDetail: [],
-                updatedBy: req.body.user.username,
-              });
-            }
-          });
-          leaveInsert.push({ user_id: username, leaveDetail: modifyLeave });
-        });
       }
     }
+
+    // const checkValidUser = await user.aggregate([
+    //   {
+    //     $match: {
+    //       username: {
+    //         $in: userArray,
+    //       },
+    //     },
+    //   },
+    //   {
+    //     $project: {
+    //       username: 1,
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "leavelists",
+    //       localField: "username",
+    //       foreignField: "user_id",
+    //       as: "leave",
+    //     },
+    //   },
+    //   {
+    //     $unwind: {
+    //       path: "$leave",
+    //       preserveNullAndEmptyArrays: true,
+    //     },
+    //   },
+    // ]);
+    // const invaliUser = list.filter(
+    //   (item1: any) =>
+    //     !checkValidUser.some((item2) => item2.username === item1.username)
+    // );
+
+    // if (invaliUser.length > 0) {
+    //   return res
+    //     .status(StatusCodes.NOT_FOUND)
+    //     .json({ message: "user not found!", data: invaliUser });
+    // } else {
+    //   const leave = checkValidUser.map((item: any) => item.leave);
+    //   let invalidYear: any = [];
+    //   leave.forEach((elm) => {
+    //     const invalid = list.filter(
+    //       (item1: any) =>
+    //         !elm.leaveDetail.some(
+    //           (item2: any) => item2.leaveYear !== item1.year
+    //         )
+    //     );
+    //     invalidYear = invalid;
+    //   });
+
+    //   if (invalidYear.length > 0) {
+    //     return res
+    //       .status(StatusCodes.CONFLICT)
+    //       .json({ message: "User leave already allloted", data: invalidYear });
+    //   } else {
+    //     let leaveInsert: any = [];
+    //     leave.forEach((item) => {
+    //       let username = "";
+    //       let modifyLeave = item.leaveDetail;
+    //       list.forEach((elm: any) => {
+    //         if (elm.username === item.user_id) {
+    //           username = item.user_id;
+    //           modifyLeave.push({
+    //             leaveYear: elm.year,
+    //             totalLeaveLeft: `${elm.leave}`,
+    //             totalLeave: `${elm.leave}`,
+    //             leaveUseDetail: [],
+    //             updatedBy: req.body.user.username,
+    //           });
+    //         }
+    //       });
+    //       leaveInsert.push({ user_id: username, leaveDetail: modifyLeave });
+    //     });
+    //   }
+    // }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
