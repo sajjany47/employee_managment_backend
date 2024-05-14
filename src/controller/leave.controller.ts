@@ -414,7 +414,8 @@ const userApplyLeaveApproved = async (req: Request, res: Response) => {
 
 const excelLeaveAllot = async (req: Request, res: Response) => {
   try {
-    const userArray = req.body.list.map((item: any) => item.username);
+    const list = req.body.list;
+    const userArray: any = req.body.list.map((item: any) => item.username);
     const checkValidUser = await user.aggregate([
       {
         $match: {
@@ -442,45 +443,53 @@ const excelLeaveAllot = async (req: Request, res: Response) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-      {
-        $unwind: {
-          path: "$leave.leaveDetail",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $match: {
-          "leave.leaveDetail.leaveYear": req.body.list[0].year,
-        },
-      },
     ]);
-    if (checkValidUser.length > 0) {
+    const invaliUser = list.filter(
+      (item1: any) =>
+        !checkValidUser.some((item2) => item2.username === item1.username)
+    );
+
+    if (invaliUser.length > 0) {
       return res
-        .status(StatusCodes.CONFLICT)
-        .json({ message: "User already leave alloted", data: checkValidUser });
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "user not found!", data: invaliUser });
     } else {
-      req.body.list.forEach((item: any) => {
-        const insertLeave = leave.updateOne(
-          { user_id: item.username },
-          {
-            $push: {
-              leaveDetail: {
-                leaveYear: moment(item.year).format("YYYY"),
-                totalLeaveLeft: item.leave,
-                totalLeave: item.leave,
-                leaveUseDetail: [],
-                updatedBy: req.body.user.username,
-              },
-            },
-          }
+      const leave = checkValidUser.map((item: any) => item.leave);
+      let invalidYear: any = [];
+      leave.forEach((elm) => {
+        const invalid = list.filter(
+          (item1: any) =>
+            !elm.leaveDetail.some(
+              (item2: any) => item2.leaveYear !== item1.year
+            )
         );
+        invalidYear = invalid;
       });
 
-      res.status(StatusCodes.OK).json({
-        message: `Current Year (${moment(req.body.list[0].year).format(
-          "YYYY"
-        )}) leave Allocated successfully`,
-      });
+      if (invalidYear.length > 0) {
+        return res
+          .status(StatusCodes.CONFLICT)
+          .json({ message: "User leave already allloted", data: invalidYear });
+      } else {
+        let leaveInsert: any = [];
+        leave.forEach((item) => {
+          let modifyLeave = item.leaveDetail;
+          list.forEach((elm: any) => {
+            if (elm.username === item.user_id) {
+              modifyLeave.push({
+                leaveYear: elm.year,
+                totalLeaveLeft: `${elm.leave}`,
+                totalLeave: `${elm.leave}`,
+                leaveUseDetail: [],
+                updatedBy: req.body.user.username,
+              });
+            }
+          });
+          leaveInsert.push(modifyLeave);
+        });
+
+        console.log(leaveInsert);
+      }
     }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
