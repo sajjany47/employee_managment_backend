@@ -24,7 +24,7 @@ const leaveAlloted = async (req: Request, res: Response) => {
           totalLeaveLeft: reqData.leaveAlloted,
           totalLeave: reqData.leaveAlloted,
           leaveUseDetail: [],
-          updatedBy: reqData.createdBy,
+          updatedBy: reqData.user.username,
         };
 
         const insertLeave = await leave.updateOne(
@@ -47,7 +47,7 @@ const leaveAlloted = async (req: Request, res: Response) => {
             totalLeaveLeft: reqData.leaveAlloted,
             totalLeave: reqData.leaveAlloted,
             leaveUseDetail: [],
-            updatedBy: reqData.createdBy,
+            updatedBy: reqData.user.username,
           },
         ],
 
@@ -454,6 +454,43 @@ const excelLeaveAllot = async (req: Request, res: Response) => {
           .status(StatusCodes.CONFLICT)
           .json({ message: "Leave already allot", data: invalidYear });
       } else {
+        // for (let index = 0; index < list.length; index++) {
+        //   const element = list[index];
+
+        //   const modifyLeave = {
+        //     leaveYear: `${element.year}`,
+        //     totalLeaveLeft: element.leave,
+        //     totalLeave: element.leave,
+        //     leaveUseDetail: [],
+        //     updatedBy: req.body.user.username,
+        //   };
+
+        //   const insertLeave = await leave.updateOne(
+        //     { user_id: element.username },
+        //     { $push: { leaveDetail: modifyLeave } }
+        //   );
+        // }
+
+        // for (const detail of list) {
+        //   const { username, leave, year } = detail;
+
+        //   const modifyLeave = {
+        //     leaveYear: `${year}`,
+        //     totalLeaveLeft: leave,
+        //     totalLeave: leave,
+        //     leaveUseDetail: [],
+        //     updatedBy: req.body.user.username,
+        //   };
+
+        //   const insertLeave = await leave.updateOne(
+        //     { username },
+        //     { $push: { leaveDetail: modifyLeave } },
+        //     { upsert: true }
+        //   );
+        // }
+        res.status(StatusCodes.OK).json({
+          message: `leave Allocated successfully`,
+        });
       }
     }
 
