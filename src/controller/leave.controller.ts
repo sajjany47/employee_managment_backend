@@ -454,22 +454,22 @@ const excelLeaveAllot = async (req: Request, res: Response) => {
           .status(StatusCodes.CONFLICT)
           .json({ message: "Leave already allot", data: invalidYear });
       } else {
-        // for (let index = 0; index < list.length; index++) {
-        //   const element = list[index];
+        for (let index = 0; index < list.length; index++) {
+          const element = list[index];
 
-        //   const modifyLeave = {
-        //     leaveYear: `${element.year}`,
-        //     totalLeaveLeft: element.leave,
-        //     totalLeave: element.leave,
-        //     leaveUseDetail: [],
-        //     updatedBy: req.body.user.username,
-        //   };
+          const modifyLeave = {
+            leaveYear: `${element.year}`,
+            totalLeaveLeft: element.leave,
+            totalLeave: element.leave,
+            leaveUseDetail: [],
+            updatedBy: req.body.user.username,
+          };
 
-        //   const insertLeave = await leave.updateOne(
-        //     { user_id: element.username },
-        //     { $push: { leaveDetail: modifyLeave } }
-        //   );
-        // }
+          const insertLeave = await leave.updateOne(
+            { user_id: element.username },
+            { $push: { leaveDetail: modifyLeave } }
+          );
+        }
 
         // for (const detail of list) {
         //   const { username, leave, year } = detail;
