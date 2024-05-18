@@ -416,7 +416,7 @@ const excelLeaveAllot = async (req: Request, res: Response) => {
   try {
     const list = req.body.list;
     const userArray: any = req.body.list.map((item: any) => item.username);
-
+    console.log("list", list);
     const checkValidUser = await user.find(
       {
         username: { $in: userArray },
@@ -429,6 +429,7 @@ const excelLeaveAllot = async (req: Request, res: Response) => {
       (item1: any) =>
         !checkValidUser.some((item2) => item2.username === item1.username)
     );
+
     if (invalidUser.length > 0) {
       return res
         .status(StatusCodes.NOT_FOUND)
@@ -465,110 +466,17 @@ const excelLeaveAllot = async (req: Request, res: Response) => {
             updatedBy: req.body.user.username,
           };
 
-          const insertLeave = await leave.updateOne(
-            { user_id: element.username },
-            { $push: { leaveDetail: modifyLeave } }
-          );
+          // const insertLeave = await leave.updateOne(
+          //   { user_id: element.username },
+          //   { $push: { leaveDetail: modifyLeave } }
+          // );
         }
 
-        // for (const detail of list) {
-        //   const { username, leave, year } = detail;
-
-        //   const modifyLeave = {
-        //     leaveYear: `${year}`,
-        //     totalLeaveLeft: leave,
-        //     totalLeave: leave,
-        //     leaveUseDetail: [],
-        //     updatedBy: req.body.user.username,
-        //   };
-
-        //   const insertLeave = await leave.updateOne(
-        //     { username },
-        //     { $push: { leaveDetail: modifyLeave } },
-        //     { upsert: true }
-        //   );
-        // }
         res.status(StatusCodes.OK).json({
           message: `leave Allocated successfully`,
         });
       }
     }
-
-    // const checkValidUser = await user.aggregate([
-    //   {
-    //     $match: {
-    //       username: {
-    //         $in: userArray,
-    //       },
-    //     },
-    //   },
-    //   {
-    //     $project: {
-    //       username: 1,
-    //     },
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "leavelists",
-    //       localField: "username",
-    //       foreignField: "user_id",
-    //       as: "leave",
-    //     },
-    //   },
-    //   {
-    //     $unwind: {
-    //       path: "$leave",
-    //       preserveNullAndEmptyArrays: true,
-    //     },
-    //   },
-    // ]);
-    // const invaliUser = list.filter(
-    //   (item1: any) =>
-    //     !checkValidUser.some((item2) => item2.username === item1.username)
-    // );
-
-    // if (invaliUser.length > 0) {
-    //   return res
-    //     .status(StatusCodes.NOT_FOUND)
-    //     .json({ message: "user not found!", data: invaliUser });
-    // } else {
-    //   const leave = checkValidUser.map((item: any) => item.leave);
-    //   let invalidYear: any = [];
-    //   leave.forEach((elm) => {
-    //     const invalid = list.filter(
-    //       (item1: any) =>
-    //         !elm.leaveDetail.some(
-    //           (item2: any) => item2.leaveYear !== item1.year
-    //         )
-    //     );
-    //     invalidYear = invalid;
-    //   });
-
-    //   if (invalidYear.length > 0) {
-    //     return res
-    //       .status(StatusCodes.CONFLICT)
-    //       .json({ message: "User leave already allloted", data: invalidYear });
-    //   } else {
-    //     let leaveInsert: any = [];
-    //     leave.forEach((item) => {
-    //       let username = "";
-    //       let modifyLeave = item.leaveDetail;
-    //       list.forEach((elm: any) => {
-    //         if (elm.username === item.user_id) {
-    //           username = item.user_id;
-    //           modifyLeave.push({
-    //             leaveYear: elm.year,
-    //             totalLeaveLeft: `${elm.leave}`,
-    //             totalLeave: `${elm.leave}`,
-    //             leaveUseDetail: [],
-    //             updatedBy: req.body.user.username,
-    //           });
-    //         }
-    //       });
-    //       leaveInsert.push({ user_id: username, leaveDetail: modifyLeave });
-    //     });
-    //   }
-    // }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
