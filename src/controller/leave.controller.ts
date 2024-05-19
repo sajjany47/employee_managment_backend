@@ -415,8 +415,9 @@ const userApplyLeaveApproved = async (req: Request, res: Response) => {
 const excelLeaveAllot = async (req: Request, res: Response) => {
   try {
     const list = req.body.list;
+
     const userArray: any = req.body.list.map((item: any) => item.username);
-    console.log("list", list);
+
     const checkValidUser = await user.find(
       {
         username: { $in: userArray },
@@ -441,12 +442,10 @@ const excelLeaveAllot = async (req: Request, res: Response) => {
 
       let invalidYear: any = [];
       checkValidYear.forEach((elm) => {
-        const invalid = list.filter(
-          (item1: any) =>
-            !elm.leaveDetail.some(
-              (item2: any) => item2.leaveYear !== `${item1.year}`
-            )
+        const invalid = list.filter((item1: any) =>
+          elm.leaveDetail.some((item2: any) => item2.leaveYear === item1.year)
         );
+
         invalidYear = invalid;
       });
 
