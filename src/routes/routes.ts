@@ -26,7 +26,11 @@ import { employeeList } from "../controller/employee.controller";
 import {
   createHolidayList,
   deleteHolidayList,
+  downloadExcelHoliday,
+  downloadeBlankExcelHoliday,
+  excelInsertHoliday,
   holidayListData,
+  readExcelHoliday,
   // holidayListData,
 } from "../controller/holiday.controller";
 import {
@@ -78,6 +82,12 @@ routes.route("/employee-list").get(auth, employeeList);
 routes.route("/holiday-list/:id").get(auth, holidayListData);
 routes.route("/create-holiday").post(auth, createHolidayList);
 routes.route("/delete-holiday").post(auth, deleteHolidayList);
+routes
+  .route("/excel-holiday/download-blank")
+  .get(auth, downloadeBlankExcelHoliday);
+routes.route("/excel-holiday/read").post(auth, readExcelHoliday);
+routes.route("/excel-holiday/insert").post(auth, excelInsertHoliday);
+routes.route("/excel-holiday/download").post(auth, downloadExcelHoliday);
 routes.route("/single-user/leave-create").post(auth, leaveAlloted);
 routes.route("/userlist/leave/:year").get(auth, getNewUserList);
 routes.route("/leave-alloted-list").post(auth, leaveList);

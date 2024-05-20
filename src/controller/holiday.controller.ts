@@ -4,6 +4,7 @@ import holidayList from "../model/holiday.model";
 import moment from "moment";
 import mongoose from "mongoose";
 import Excel, { Workbook } from "exceljs";
+import holidayList from "../model/holiday.model";
 
 const holidayListData = async (req: Request, res: Response) => {
   try {
@@ -178,7 +179,6 @@ const readExcelHoliday = async (req: Request, res: Response) => {
       const modifyData = rows.map((item: any) => ({
         holidayDate: moment(item.Date).format("YYYY-MM-DD"),
         reason: item["Holiday Reason"],
-        createdBy: req.body.user.username,
       }));
 
       return res
@@ -192,19 +192,106 @@ const readExcelHoliday = async (req: Request, res: Response) => {
 
 const excelInsertHoliday = async (req: Request, res: Response) => {
   try {
-    const list = req.body.list;
+    const list = req.body.list.map((item: any) => ({
+      ...item,
+      holidayDate: moment(item.holidayDate).format("YYYY-MM-DD"),
+      createdBy: req.body.user.username,
+    }));
 
     const checkValidHolidayYear = await holidayList.findOne({
       holidayYear: moment(list[0].holidayDate).format("YYYY"),
     });
 
     if (checkValidHolidayYear) {
-      const updateHoliday = await holidayList.updateOne();
+      const invalidHolidayDate = list.filter(
+        (item1: any) =>
+          !checkValidHolidayYear.holidayList.some(
+            (item2) => item2.holidayDate === item1.holidayDate
+          )
+      );
+
+      if (invalidHolidayDate.length > 0) {
+        return res.status(StatusCodes.CONFLICT).json({
+          message: "Holiday already present",
+          data: invalidHolidayDate,
+        });
+      } else {
+        const updateHoliday = await holidayList.updateOne(
+          {
+            holidayYear: list[0].holidayDate,
+          },
+          {
+            $set: {
+              holidayList: [...checkValidHolidayYear.holidayList, ...list],
+            },
+          }
+        );
+
+        return res
+          .status(StatusCodes.OK)
+          .json({ message: "Holiday list updated successfully" });
+      }
     } else {
+      const holidayData = new holidayList({
+        holidayYear: moment(list[0].holidayDate).format("YYYY"),
+        holidayList: list,
+      });
+
+      await holidayData.save();
+
+      res.status(StatusCodes.OK).json({
+        message: "Holiday List created successfully",
+      });
     }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
 };
 
-export { createHolidayList, holidayListData, deleteHolidayList };
+const downloadExcelHoliday = async (req: Request, res: Response) => {
+  try {
+    const holidayData = await holidayList.findOne({
+      holidayYear: req.body.year,
+    });
+    if (holidayData) {
+      const workbook = new Excel.Workbook();
+      const workSheet = workbook.addWorksheet("Holiday List");
+
+      workSheet.columns = [
+        { header: "Date", key: "holidayDate", width: 30 },
+        { header: "Holiday Reason", key: "reason", width: 30 },
+      ];
+
+      holidayData.holidayList.forEach((item, index) => {
+        workSheet.addRow({
+          id: index + 1,
+          holidayDate: item.holidayDate,
+          reason: item.reason,
+        });
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=" + "holiday-list.xlsx"
+      );
+      workbook.xlsx.write(res).then(() => res.end());
+    } else {
+      res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "Holiday list not present selected year" });
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+export {
+  createHolidayList,
+  holidayListData,
+  deleteHolidayList,
+  downloadeBlankExcelHoliday,
+  readExcelHoliday,
+  excelInsertHoliday,
+  downloadExcelHoliday,
+};
