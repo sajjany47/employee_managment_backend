@@ -465,10 +465,10 @@ const excelLeaveAllot = async (req: Request, res: Response) => {
             updatedBy: req.body.user.username,
           };
 
-          // const insertLeave = await leave.updateOne(
-          //   { user_id: element.username },
-          //   { $push: { leaveDetail: modifyLeave } }
-          // );
+          const insertLeave = await leave.updateOne(
+            { user_id: element.username },
+            { $push: { leaveDetail: modifyLeave } }
+          );
         }
 
         res.status(StatusCodes.OK).json({
