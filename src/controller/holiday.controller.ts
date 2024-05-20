@@ -4,7 +4,6 @@ import holidayList from "../model/holiday.model";
 import moment from "moment";
 import mongoose from "mongoose";
 import Excel, { Workbook } from "exceljs";
-import holidayList from "../model/holiday.model";
 
 const holidayListData = async (req: Request, res: Response) => {
   try {
