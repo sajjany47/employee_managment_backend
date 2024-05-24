@@ -206,9 +206,13 @@ const excelInsertHoliday = async (req: Request, res: Response) => {
       const invalidHolidayDate = list.filter(
         (item1: any) =>
           !checkValidHolidayYear.holidayList.some(
-            (item2) => `${item2.holidayDate}` !== `${item1.holidayDate}`
+            (item2) =>
+              `${moment(item2.holidayDate).format("YYYY-MM-DD")}` !==
+              `${moment(item1.holidayDate).format("YYYY-MM-DD")}`
           )
       );
+
+      console.log(checkValidHolidayYear.holidayList);
 
       if (invalidHolidayDate.length > 0) {
         return res.status(StatusCodes.CONFLICT).json({
