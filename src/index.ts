@@ -8,12 +8,14 @@ import { Server } from "socket.io";
 import { createServer } from "http";
 import cron from "node-cron";
 import { generatePayrollMonthly } from "./utility/utility";
+import fileUpload from "express-fileupload";
 
 function main() {
   const port = process.env.PORT || 8081;
   const mongodb_url: any = process.env.mongodb_url;
   const cookieSecretKey: any = process.env.COOKIE_SECRET;
   const app: any = express();
+  app.use(fileUpload());
   const server: any = createServer(app);
   const io = new Server(server, {
     cors: {
@@ -26,6 +28,7 @@ function main() {
   // const corsOptions = {
   //   origin: "http://localhost:8081",
   // };
+
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ limit: "30 mb", extended: true }));
   app.use(

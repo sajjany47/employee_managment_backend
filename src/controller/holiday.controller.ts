@@ -142,7 +142,8 @@ const downloadeBlankExcelHoliday = async (req: Request, res: Response) => {
 
 const readExcelHoliday = async (req: Request, res: Response) => {
   try {
-    const excelFile: any = req.files.files;
+    const files: any = Object.assign({}, req.files);
+    const excelFile: any = files.file;
     const workbook = new Excel.Workbook();
     await workbook.xlsx.load(excelFile.data);
     const worksheet = workbook.worksheets[0];
@@ -205,7 +206,7 @@ const excelInsertHoliday = async (req: Request, res: Response) => {
       const invalidHolidayDate = list.filter(
         (item1: any) =>
           !checkValidHolidayYear.holidayList.some(
-            (item2) => item2.holidayDate === item1.holidayDate
+            (item2) => `${item2.holidayDate}` !== `${item1.holidayDate}`
           )
       );
 
@@ -217,11 +218,11 @@ const excelInsertHoliday = async (req: Request, res: Response) => {
       } else {
         const updateHoliday = await holidayList.updateOne(
           {
-            holidayYear: list[0].holidayDate,
+            holidayYear: moment(list[0].holidayDate).format("YYYY"),
           },
           {
-            $set: {
-              holidayList: [...checkValidHolidayYear.holidayList, ...list],
+            $push: {
+              holidayList: list,
             },
           }
         );
