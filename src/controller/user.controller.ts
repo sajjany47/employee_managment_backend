@@ -5,6 +5,11 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 import mongoose from "mongoose";
+import leave from "../model/leave.model";
+import moment from "moment";
+import nodeMailer from "nodemailer";
+import { registerTemplate } from "../utility/template";
+import { request } from "http";
 
 const generateActivationKey = async (req: Request, res: Response) => {
   try {
@@ -37,7 +42,7 @@ const generateActivationKey = async (req: Request, res: Response) => {
         role: reqData.role,
         password: await bcrypt.hash(reqData.password, 10),
         activationCode: activationKey,
-        position: null,
+        position: reqData.position,
         skill: null,
         address: null,
         state: null,
@@ -73,13 +78,53 @@ const generateActivationKey = async (req: Request, res: Response) => {
           ifsc: null,
           branchName: null,
         },
-        createdBy: reqData.createdBy,
+        createdBy: reqData.user.username,
         updatedBy: null,
-        approvedBy: reqData.approvedBy,
+        approvedBy: reqData.user.username,
         activeStatus: true,
         registrationStatus: "waiting",
       });
       const saveUser = await userData.save();
+
+      const createLeaveList = new leave({
+        user_id: reqData.username,
+        leaveDetail: [
+          {
+            leaveYear: moment(new Date()).format("YYYY"),
+            totalLeaveLeft: (12 - (moment().month() + 1)) * 2,
+            totalLeave: (12 - (moment().month() + 1)) * 2,
+            leaveUseDetail: [],
+            updatedBy: reqData.createdBy,
+          },
+        ],
+
+        createdBy: reqData.createdBy,
+      });
+
+      await createLeaveList.save();
+
+      const transporter = nodeMailer.createTransport({
+        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.USER,
+          pass: process.env.USER_PASSWORD,
+        },
+      });
+
+      await transporter.sendMail({
+        from: " <sajjany47@gmail.com>", // sender address
+        to: reqData.email, // list of receivers
+        subject: "Your account has been successfully created", // Subject line
+        // text: activationKey, // plain text body
+        html: registerTemplate({
+          username: reqData.username,
+          password: reqData.password,
+        }), // html body
+      });
+
       res.status(StatusCodes.OK).json({
         message: "Activation key created successfully",
         activationKey: saveUser.activationCode,
@@ -134,6 +179,7 @@ const checkActivationKey = async (req: Request, res: Response) => {
 const userUpdate = async (req: Request, res: Response) => {
   try {
     const reqData: any = Object.assign({}, req.body);
+
     const validUser = await user.findOne({
       activationCode: reqData.activationCode,
     });
@@ -156,9 +202,15 @@ const userUpdate = async (req: Request, res: Response) => {
         workDetail: reqData.workDetail,
         document: reqData.document,
         bankDetails: reqData.bankDetails,
-        registrationStatus: "pending",
+        registrationStatus:
+          reqData.user.role === "admin" || reqData.user.role === "hr"
+            ? "verified"
+            : "pending",
         updatedBy: reqData.updatedBy,
-        approvedBy: null,
+        approvedBy:
+          reqData.user.role === "admin" || reqData.user.role === "hr"
+            ? reqData.user.username
+            : null,
         activeStatus: true,
       };
 
@@ -215,24 +267,24 @@ const userUpdate = async (req: Request, res: Response) => {
   }
 };
 
-const forgetPassword = async (req: Request, res: Response) => {
+const adminChangePassword = async (req: Request, res: Response) => {
   try {
-    const reqData: any = Object.assign({}, req.body);
-    const validUser = await user.findOne({
-      $or: [
-        { username: reqData.userId },
-        { email: reqData.userId },
-        { mobile: reqData.userId },
-      ],
+    const findUser: any = await user.findOne({
+      _id: new mongoose.Types.ObjectId(req.body._id),
     });
-    if (validUser) {
-      validUser.password = await bcrypt.hash(reqData.password, 10);
-      validUser.save();
-      res
+    if (findUser) {
+      const updateData = await user.updateOne(
+        { _id: new mongoose.Types.ObjectId(req.body._id) },
+        { $set: { password: await bcrypt.hash(req.body.newPassword, 10) } }
+      );
+
+      return res
         .status(StatusCodes.OK)
-        .json({ message: "Password change successfully" });
+        .json({ message: "Password updated successfully" });
     } else {
-      res.status(StatusCodes.NOT_FOUND).json({ message: "User not found" });
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "User not found" });
     }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
@@ -251,10 +303,7 @@ const login = async (req: Request, res: Response) => {
     });
 
     if (checkUser) {
-      if (
-        checkUser.activeStatus === true &&
-        checkUser.registrationStatus === "verified"
-      ) {
+      if (checkUser.activeStatus === true) {
         const verifyPassword = await bcrypt.compare(
           reqData.password,
           checkUser.password
@@ -274,7 +323,11 @@ const login = async (req: Request, res: Response) => {
 
           const scretKey: any = process.env.secret_Key;
           const token = jwt.sign(
-            { _id: checkUser._id, username: checkUser.username },
+            {
+              _id: checkUser._id,
+              username: checkUser.username,
+              role: checkUser.role,
+            },
             scretKey,
             {
               expiresIn: "6h",
@@ -313,9 +366,7 @@ const activeStatus = async (req: Request, res: Response) => {
         { username: req.body.username },
         {
           activeStatus: req.body.activeStatus,
-          updatedBy: req.body.updatedBy,
-          // approvedBy: req.body.approvedBy,
-          // registrationStatus: "approved",
+          updatedBy: req.body.user.username,
         }
       );
       return res
@@ -333,19 +384,77 @@ const userDatatTable = async (req: Request, res: Response) => {
     const page = reqData.page;
     const limit = reqData.limit;
     const start = page * limit - limit;
-    const search = {
-      name: { $regex: `^${reqData.search.name}`, $options: "i" },
-      username: { $regex: `^${reqData.search.username}`, $options: "i" },
-      mobile: { $regex: `^${reqData.search.mobile}`, $options: "i" },
-    };
-    const searchDataTable = await user.aggregate([
-      { $match: reqData?.search ? search : {} },
-      { $skip: start },
-      { $limit: limit },
+    const query: any[] = [];
+    if (reqData.hasOwnProperty("name")) {
+      query.push({ name: { $regex: `^${reqData.name}`, $options: "i" } });
+    }
+    if (reqData.hasOwnProperty("username")) {
+      query.push({ username: reqData.username });
+    }
+    if (reqData.hasOwnProperty("mobile")) {
+      query.push({ mobile: reqData.mobile });
+    }
+    if (reqData.hasOwnProperty("activationCode")) {
+      query.push({ activationCode: reqData.activationCode });
+    }
+    if (reqData.hasOwnProperty("role")) {
+      query.push({
+        role: { $regex: `^${reqData.role}`, $options: "i" },
+      });
+    }
+    if (reqData.hasOwnProperty("email")) {
+      query.push({ email: reqData.email });
+    }
+    if (reqData.hasOwnProperty("position")) {
+      query.push({
+        position: { $regex: `^${reqData.position}`, $options: "i" },
+      });
+    }
+    if (reqData.hasOwnProperty("country")) {
+      query.push({
+        country: { $regex: `^${reqData.country}`, $options: "i" },
+      });
+    }
+    if (reqData.hasOwnProperty("state")) {
+      query.push({
+        state: { $regex: `^${reqData.state}`, $options: "i" },
+      });
+    }
+    if (reqData.hasOwnProperty("registrationStatus")) {
+      query.push({
+        registrationStatus: {
+          $regex: `^${reqData.registrationStatus}`,
+          $options: "i",
+        },
+      });
+    }
+    if (reqData.hasOwnProperty("activeStatus")) {
+      query.push({ activeStatus: reqData.activeStatus });
+    }
+
+    const data: any[] = await Promise.all([
+      user.countDocuments([
+        { $match: query.length > 0 ? { $and: query } : {} },
+      ]),
+      user.aggregate([
+        { $match: query.length > 0 ? { $and: query } : {} },
+        {
+          $sort: reqData.hasOwnProperty("sort")
+            ? reqData.sort
+            : {
+                name: 1,
+              },
+        },
+        { $skip: start },
+        { $limit: limit },
+      ]),
     ]);
-    res
-      .status(StatusCodes.OK)
-      .json({ message: "Data fetched successfully", data: searchDataTable });
+
+    res.status(StatusCodes.OK).json({
+      message: "Data fetched successfully",
+      data: data[1],
+      count: data[0],
+    });
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
@@ -360,7 +469,7 @@ const userVerified = async (req: Request, res: Response) => {
       await user.updateOne(
         { activationCode: req.body.activationCode },
         {
-          approvedBy: req.body.approvedBy,
+          approvedBy: req.body.user.username,
           registrationStatus: req.body.registrationStatus,
         }
       );
@@ -378,6 +487,7 @@ const userVerified = async (req: Request, res: Response) => {
 const singleUser = async (req: Request, res: Response) => {
   try {
     const id = req.params;
+
     const findUser: any = await user.findOne(
       { _id: new mongoose.Types.ObjectId(id.id) },
       { password: 0 }
@@ -390,9 +500,43 @@ const singleUser = async (req: Request, res: Response) => {
   }
 };
 
+const userPasswordChange = async (req: Request, res: Response) => {
+  try {
+    const findUser: any = await user.findOne({
+      _id: new mongoose.Types.ObjectId(req.body._id),
+    });
+    if (findUser) {
+      const verifiedOldPassword = await bcrypt.compare(
+        req.body.oldPassword,
+        findUser.password
+      );
+      if (verifiedOldPassword) {
+        const updateData = await user.updateOne(
+          { _id: new mongoose.Types.ObjectId(req.body._id) },
+          { $set: { password: await bcrypt.hash(req.body.newPassword, 10) } }
+        );
+
+        return res
+          .status(StatusCodes.OK)
+          .json({ message: "Password updated successfully" });
+      } else {
+        return res
+          .status(StatusCodes.UNAUTHORIZED)
+          .json({ message: "Old password is not matched" });
+      }
+    } else {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "User not found" });
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 export {
   generateActivationKey,
-  forgetPassword,
+  adminChangePassword,
   userUpdate,
   checkActivationKey,
   login,
@@ -401,4 +545,5 @@ export {
   userDatatTable,
   userVerified,
   singleUser,
+  userPasswordChange,
 };

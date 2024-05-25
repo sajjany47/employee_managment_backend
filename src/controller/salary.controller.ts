@@ -135,11 +135,41 @@ const salaryUserAlloted = async (req: Request, res: Response) => {
 
 const salaryList = async (req: Request, res: Response) => {
   try {
-    const allotedSalaryList = await salary.find({});
+    const reqData = req.body;
+    const page = reqData.page;
+    const limit = reqData.limit;
+    const start = page * limit - limit;
+    const query: any[] = [];
 
+    if (reqData.hasOwnProperty("username")) {
+      query.push({
+        username: { $regex: `^${reqData.username}`, $options: "i" },
+      });
+    }
+
+    const data: any[] = await Promise.all([
+      salary.countDocuments([
+        { $match: query.length > 0 ? { $and: query } : {} },
+      ]),
+      salary.aggregate([
+        { $match: query.length > 0 ? { $and: query } : {} },
+        {
+          $sort: reqData.hasOwnProperty("sort")
+            ? reqData.sort
+            : { username: 1 },
+        },
+        {
+          $skip: start,
+        },
+        {
+          $limit: limit,
+        },
+      ]),
+    ]);
     res.status(StatusCodes.OK).json({
       message: "Data fetched successfully",
-      data: allotedSalaryList,
+      data: data[1],
+      count: data[0],
     });
   } catch (error: any) {
     res.status(StatusCodes.OK).json({ message: error.message });

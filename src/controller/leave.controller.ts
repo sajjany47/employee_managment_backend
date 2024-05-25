@@ -24,7 +24,7 @@ const leaveAlloted = async (req: Request, res: Response) => {
           totalLeaveLeft: reqData.leaveAlloted,
           totalLeave: reqData.leaveAlloted,
           leaveUseDetail: [],
-          updatedBy: reqData.createdBy,
+          updatedBy: reqData.user.username,
         };
 
         const insertLeave = await leave.updateOne(
@@ -47,7 +47,7 @@ const leaveAlloted = async (req: Request, res: Response) => {
             totalLeaveLeft: reqData.leaveAlloted,
             totalLeave: reqData.leaveAlloted,
             leaveUseDetail: [],
-            updatedBy: reqData.createdBy,
+            updatedBy: reqData.user.username,
           },
         ],
 
@@ -95,8 +95,23 @@ const getNewUserList = async (req: Request, res: Response) => {
 
 const leaveList = async (req: Request, res: Response) => {
   try {
-    const id = req.params.id;
+    const reqData = req.body;
+    const page = reqData.page;
+    const limit = reqData.limit;
+    const start = page * limit - limit;
+    const year = reqData.year;
+    const query = [];
+
+    if (reqData.hasOwnProperty("username")) {
+      query.push({
+        user_id: { $regex: `^${reqData.username}`, $options: "i" },
+      });
+    }
+
     const findLeaveList = await leave.aggregate([
+      {
+        $match: query.length > 0 ? { $and: query } : {},
+      },
       {
         $unwind: {
           path: "$leaveDetail",
@@ -104,8 +119,14 @@ const leaveList = async (req: Request, res: Response) => {
       },
       {
         $match: {
-          "leaveDetail.leaveYear": id,
+          "leaveDetail.leaveYear": year,
         },
+      },
+      {
+        $skip: start,
+      },
+      {
+        $limit: limit,
       },
     ]);
 
@@ -391,6 +412,75 @@ const userApplyLeaveApproved = async (req: Request, res: Response) => {
   }
 };
 
+const excelLeaveAllot = async (req: Request, res: Response) => {
+  try {
+    const list = req.body.list;
+
+    const userArray: any = req.body.list.map((item: any) => item.username);
+
+    const checkValidUser = await user.find(
+      {
+        username: { $in: userArray },
+        activeStatus: true,
+      },
+      { username: 1 }
+    );
+
+    const invalidUser = list.filter(
+      (item1: any) =>
+        !checkValidUser.some((item2) => item2.username === item1.username)
+    );
+
+    if (invalidUser.length > 0) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "User not found!", data: invalidUser });
+    } else {
+      const checkValidYear = await leave.find({
+        user_id: { $in: userArray },
+      });
+
+      let invalidYear: any = [];
+      checkValidYear.forEach((elm) => {
+        const invalid = list.filter((item1: any) =>
+          elm.leaveDetail.some((item2: any) => item2.leaveYear === item1.year)
+        );
+
+        invalidYear = invalid;
+      });
+
+      if (invalidYear.length > 0) {
+        return res
+          .status(StatusCodes.CONFLICT)
+          .json({ message: "Leave already allot", data: invalidYear });
+      } else {
+        for (let index = 0; index < list.length; index++) {
+          const element = list[index];
+
+          const modifyLeave = {
+            leaveYear: `${element.year}`,
+            totalLeaveLeft: element.leave,
+            totalLeave: element.leave,
+            leaveUseDetail: [],
+            updatedBy: req.body.user.username,
+          };
+
+          const insertLeave = await leave.updateOne(
+            { user_id: element.username },
+            { $push: { leaveDetail: modifyLeave } }
+          );
+        }
+
+        res.status(StatusCodes.OK).json({
+          message: `leave Allocated successfully`,
+        });
+      }
+    }
+  } catch (error: any) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
 export {
   leaveAlloted,
   getNewUserList,
@@ -400,4 +490,5 @@ export {
   applyLeaveList,
   userApplyLeaveList,
   userApplyLeaveApproved,
+  excelLeaveAllot,
 };

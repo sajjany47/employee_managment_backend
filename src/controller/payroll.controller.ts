@@ -329,9 +329,9 @@ const payrollUpdate = async (req: Request, res: Response) => {
           "userPayroll.$.totalWeekend": reqData.totalWeekend,
           "userPayroll.$.currentMonthSalary": reqData.currentMonthSalary,
           "userPayroll.$.transactionNumber": reqData.transactionNumber,
-          "userPayroll.$.transactionDate": reqData.transactionDate,
-          "userPayroll.$.updatedBy": reqData.updatedBy,
-          "userPayroll.$.updatedAt": moment(reqData.updatedAt).format(),
+          "userPayroll.$.transactionDate": new Date(reqData.transactionDate),
+          "userPayroll.$.updatedBy": reqData.user.username,
+          "userPayroll.$.updatedAt": new Date(),
         },
       }
     );
@@ -348,18 +348,62 @@ const payrollUpdate = async (req: Request, res: Response) => {
 const payrollListMonthWise = async (req: Request, res: Response) => {
   try {
     const reqData = Object.assign({}, req.body);
+    const page = reqData.page;
+    const limit = reqData.limit;
+    const start = page * limit - limit;
+    const date = moment(reqData.date).format("YYYY-MM");
+    const query = [];
+    if (reqData.hasOwnProperty("username")) {
+      query.push({
+        "userPayroll.username": {
+          $regex: `^${reqData.username}`,
+          $options: "i",
+        },
+      });
+    }
 
-    const monthPayrollList = await payroll.findOne({
-      date: moment(reqData.date).format("YYYY-MM"),
-    });
-    if (monthPayrollList) {
-      return res
-        .status(StatusCodes.OK)
-        .json({ message: "Data fetched successfully", data: monthPayrollList });
+    const monthPayrollList = await payroll.aggregate([
+      {
+        $match: {
+          date: date,
+        },
+      },
+      {
+        $unwind: {
+          path: "$userPayroll",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: query.length > 0 ? { $and: query } : {},
+      },
+      {
+        $skip: start,
+      },
+      {
+        $limit: limit,
+      },
+      {
+        $group: {
+          _id: "$_id",
+          date: { $first: "$date" },
+          userPayroll: {
+            $push: "$userPayroll",
+          },
+        },
+      },
+    ]);
+
+    if (monthPayrollList.length > 0) {
+      return res.status(StatusCodes.OK).json({
+        message: "Data fetched successfully",
+        data: monthPayrollList[0],
+      });
     } else {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ message: "Payroll not generated" });
+      return res.status(StatusCodes.OK).json({
+        message: "Data fetched successfully",
+        data: monthPayrollList,
+      });
     }
   } catch (error: any) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
@@ -466,6 +510,11 @@ const salarySlipGenerate = async (req: Request, res: Response) => {
           "userInfo.dob": 1,
           "userInfo.mobile": 1,
           "salaryInfo.currentSalary": 1,
+        },
+      },
+      {
+        $sort: {
+          "userPayroll.date": -1,
         },
       },
     ]);
