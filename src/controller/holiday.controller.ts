@@ -212,8 +212,6 @@ const excelInsertHoliday = async (req: Request, res: Response) => {
           )
       );
 
-      console.log(checkValidHolidayYear.holidayList);
-
       if (invalidHolidayDate.length > 0) {
         return res.status(StatusCodes.CONFLICT).json({
           message: "Holiday already present",
