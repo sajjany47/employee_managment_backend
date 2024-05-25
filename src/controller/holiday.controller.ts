@@ -203,15 +203,14 @@ const excelInsertHoliday = async (req: Request, res: Response) => {
     });
 
     if (checkValidHolidayYear) {
-      const invalidHolidayDate = list.filter(
-        (item1: any) =>
-          !checkValidHolidayYear.holidayList.some(
-            (item2) =>
-              `${moment(item2.holidayDate).format("YYYY-MM-DD")}` !==
-              `${moment(item1.holidayDate).format("YYYY-MM-DD")}`
-          )
+      const invalidHolidayDate = list.filter((item1: any) =>
+        checkValidHolidayYear.holidayList.some(
+          (item2) =>
+            `${moment(item2.holidayDate).format("YYYY-MM-DD")}` ===
+            `${moment(item1.holidayDate).format("YYYY-MM-DD")}`
+        )
       );
-
+      console.log(invalidHolidayDate);
       if (invalidHolidayDate.length > 0) {
         return res.status(StatusCodes.CONFLICT).json({
           message: "Holiday already present",
