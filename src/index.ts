@@ -47,18 +47,48 @@ function main() {
     })
   );
 
+  // io.on("connection", (socket) => {
+  //   socket.on("joinRoom", (user) => {
+  //     socket.join(user.room);
+  //   });
+
+  //   socket.on("sendMessage", async (message) => {
+  //     // ... (same as previous snippet)
+  //     socket.to(message.receiver).emit("receiveMessage", message);
+  //   });
+
+  //   socket.on("disconnect", () => {
+  //     console.log("A user disconnected");
+  //   });
+  // });
+
+  const users: any = {}; // Store connected users and their socket IDs
+
   io.on("connection", (socket) => {
-    socket.on("joinRoom", (user) => {
-      socket.join(user.room);
+    console.log("New client connected");
+
+    // Store user and their socket ID
+    socket.on("register", (userId) => {
+      users[userId] = socket.id;
     });
 
-    socket.on("sendMessage", async (message) => {
-      // ... (same as previous snippet)
-      socket.to(message.receiver).emit("receiveMessage", message);
-    });
-
+    // Handle disconnection
     socket.on("disconnect", () => {
-      console.log("A user disconnected");
+      for (let userId in users) {
+        if (users[userId] === socket.id) {
+          delete users[userId];
+          break;
+        }
+      }
+      console.log("Client disconnected");
+    });
+
+    // Handle sending notification to a specific user
+    socket.on("sendNotification", ({ recipientId, message }) => {
+      const recipientSocketId = users[recipientId];
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit("notification", message);
+      }
     });
   });
   mongoose
