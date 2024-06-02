@@ -4,7 +4,9 @@ import notify from "../model/notification.model";
 
 const notificationList = async (req: Request, res: Response) => {
   try {
-    const userNoti = await notify.find({ receiver: req.body.user.username });
+    const userNoti = await notify.find({
+      receiver: { $in: [req.body.user.username] },
+    });
     res
       .status(StatusCodes.OK)
       .json({ message: "Data fetched successfully", data: userNoti });

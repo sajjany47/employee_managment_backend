@@ -68,7 +68,7 @@ export const calculateSalary = (
   return Number(total);
 };
 
-export const notificationSave = async (receiver: String, remark: String) => {
+export const notificationSave = async (receiver: any[], remark: String) => {
   const newNotification = new notify({
     receiver: receiver,
     date: new Date(),

@@ -246,6 +246,12 @@ const leaveApply = async (req: Request, res: Response) => {
             },
           }
         );
+        if (updateLeave) {
+          notificationSave(
+            reqData.socketUser,
+            `${reqData.user_id} apply leave`
+          );
+        }
 
         return res
           .status(StatusCodes.OK)
@@ -407,7 +413,7 @@ const userApplyLeaveApproved = async (req: Request, res: Response) => {
         );
 
         if (updateDataWithLeave) {
-          notificationSave(reqData.user_id, "Leave status changes");
+          notificationSave([reqData.user_id], "Leave status changes");
         }
 
         return res

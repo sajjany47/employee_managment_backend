@@ -82,10 +82,12 @@ function main() {
 
     // Handle sending notification to a specific user
     socket.on("sendNotification", ({ recipientId, message }) => {
-      const recipientSocketId = users[recipientId];
-      if (recipientSocketId) {
-        io.to(recipientSocketId).emit("notification", message);
-      }
+      recipientId.forEach((id: any) => {
+        const recipientSocketId = users[id];
+        if (recipientSocketId) {
+          io.to(recipientSocketId).emit("notification", message);
+        }
+      });
     });
   });
 

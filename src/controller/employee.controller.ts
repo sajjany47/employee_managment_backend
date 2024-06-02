@@ -10,7 +10,7 @@ const employeeList = async (req: Request, res: Response) => {
         {
           activeStatus: true,
         },
-        { username: 1, name: 1 }
+        { username: 1, name: 1, role: 1 }
       )
       .sort({ createdAt: -1 });
 

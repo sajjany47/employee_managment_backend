@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const userNotify = new mongoose.Schema(
   {
-    receiver: String,
+    receiver: Array,
     date: Date,
     remark: String,
     status: Boolean,
