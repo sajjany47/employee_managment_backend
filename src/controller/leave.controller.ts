@@ -4,7 +4,11 @@ import leave from "../model/leave.model";
 import moment from "moment";
 import user from "../model/user.model";
 import mongoose from "mongoose";
-import { getDateRange, getWeekendDates } from "../utility/utility";
+import {
+  getDateRange,
+  getWeekendDates,
+  notificationSave,
+} from "../utility/utility";
 
 const leaveAlloted = async (req: Request, res: Response) => {
   try {
@@ -401,6 +405,10 @@ const userApplyLeaveApproved = async (req: Request, res: Response) => {
             },
           }
         );
+
+        if (updateDataWithLeave) {
+          notificationSave(reqData.user_id, "Leave status changes");
+        }
 
         return res
           .status(StatusCodes.OK)

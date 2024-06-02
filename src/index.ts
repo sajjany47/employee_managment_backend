@@ -7,7 +7,7 @@ import cookiesession from "cookie-session";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import cron from "node-cron";
-import { generatePayrollMonthly, notificationSave } from "./utility/utility";
+import { generatePayrollMonthly } from "./utility/utility";
 import fileUpload from "express-fileupload";
 
 function main() {
@@ -85,7 +85,6 @@ function main() {
       const recipientSocketId = users[recipientId];
       if (recipientSocketId) {
         io.to(recipientSocketId).emit("notification", message);
-        notificationSave(recipientId, message);
       }
     });
   });
