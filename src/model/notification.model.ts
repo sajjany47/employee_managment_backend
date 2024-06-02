@@ -6,6 +6,7 @@ const userNotify = new mongoose.Schema(
     date: Date,
     remark: String,
     status: Boolean,
+    isHide: Boolean,
   },
   { timestamps: true }
 );

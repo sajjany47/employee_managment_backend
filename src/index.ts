@@ -7,7 +7,7 @@ import cookiesession from "cookie-session";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import cron from "node-cron";
-import { generatePayrollMonthly } from "./utility/utility";
+import { generatePayrollMonthly, notificationSave } from "./utility/utility";
 import fileUpload from "express-fileupload";
 
 function main() {
@@ -65,8 +65,6 @@ function main() {
   const users: any = {}; // Store connected users and their socket IDs
 
   io.on("connection", (socket) => {
-    console.log("New client connected");
-
     // Store user and their socket ID
     socket.on("register", (userId) => {
       users[userId] = socket.id;
@@ -80,7 +78,6 @@ function main() {
           break;
         }
       }
-      console.log("Client disconnected");
     });
 
     // Handle sending notification to a specific user
@@ -88,9 +85,11 @@ function main() {
       const recipientSocketId = users[recipientId];
       if (recipientSocketId) {
         io.to(recipientSocketId).emit("notification", message);
+        notificationSave(recipientId, message);
       }
     });
   });
+
   mongoose
     .connect(mongodb_url)
     .then(() => {
