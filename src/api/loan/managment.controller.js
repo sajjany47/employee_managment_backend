@@ -13,7 +13,7 @@ import {
 } from "./loan.config.js";
 import documentType from "../document/documentType.model.js";
 import document from "../document/document.model.js";
-import { Position } from "../employess/EmployeeConfig.js";
+import { Position, PositionWiseData } from "../employess/EmployeeConfig.js";
 
 export const LoanManagList = async (req, res) => {
   try {
@@ -50,6 +50,7 @@ export const LoanManagList = async (req, res) => {
     if (reqData?.branch) {
       searchQuery.push({ branch: new mongoose.Types.ObjectId(reqData.branch) });
     }
+    const positionList = PositionWiseData(req.user);
     const query = [
       { $match: { $and: searchQuery } },
       {
@@ -67,16 +68,7 @@ export const LoanManagList = async (req, res) => {
         },
       },
       {
-        $match: {
-          "branchDetails.country": position?.country
-            ? position?.country
-            : { $ne: "" },
-          "branchDetails.state": position.state ? position.state : { $ne: "" },
-          "branchDetails.city": position.city ? position.city : { $ne: "" },
-          "branchDetails.id": position.branch
-            ? new mongoose.Types.ObjectId(position.branch)
-            : { $ne: "" },
-        },
+        $match: positionList.length > 0 ? { $and: positionList } : {},
       },
       {
         $addFields: {

@@ -9,6 +9,7 @@ import {
   EmployeeDocumentImageUpload,
   EmployeeImageUpload,
   Position,
+  PositionWiseData,
   Status,
 } from "./EmployeeConfig.js";
 import {
@@ -750,29 +751,6 @@ export const dataTable = async (req, res) => {
     const limit = reqData.limit;
     const start = page * limit - limit;
 
-    const positionWise = [];
-    const postion = req.user.position;
-
-    if (postion === Position.SM) {
-      positionWise.push({ "branchDetails.country": req.user.country });
-      positionWise.push({ "branchDetails.state": req.user.state });
-    }
-    if (postion === Position.CM) {
-      positionWise.push({ "branchDetails.country": req.user.country });
-      positionWise.push({ "branchDetails.state": req.user.state });
-      positionWise.push({ "branchDetails.city": req.user.city });
-    }
-
-    if (
-      postion === Position.BM ||
-      postion === Position.LM ||
-      postion === Position.LD ||
-      postion === Position.VD
-    ) {
-      positionWise.push({
-        branch: new mongoose.Types.ObjectId(req.user.branch),
-      });
-    }
     const query = [];
     if (reqData.name) {
       query.push(BuildRegexQuery("name", reqData.name));
@@ -794,28 +772,29 @@ export const dataTable = async (req, res) => {
         isActive: reqData.isActive,
       });
     }
+    const positionList = PositionWiseData(req.user);
     const findQuery = [
-      {
-        $match: positionWise.length > 0 ? { $and: positionWise } : {},
-      },
       {
         $lookup: {
           from: "branches",
           localField: "branch",
           foreignField: "_id",
-          as: "branch",
+          as: "branchDetails",
         },
       },
       {
         $unwind: {
-          path: "$branch",
+          path: "$branchDetails",
           preserveNullAndEmptyArrays: true,
         },
       },
       {
+        $match: positionList.length > 0 ? { $and: positionList } : {},
+      },
+      {
         $project: {
-          branch: "$branch.name",
-          branchCode: "$branch.code",
+          branch: "$branchDetails.name",
+          branchCode: "$branchDetails.code",
           employeeId: 1,
           name: 1,
           username: 1,
