@@ -16,6 +16,7 @@ import {
 import moment from "moment";
 import { DataWithEmployeeName } from "../loan/loan.config.js";
 import ExcelJS from "exceljs";
+import { PositionWiseData } from "../employess/EmployeeConfig.js";
 
 export const financeCreate = async (req, res) => {
   try {
@@ -40,7 +41,6 @@ export const financeCreate = async (req, res) => {
           },
         ],
         payoutReedem: [],
-        payoutSchedule: [],
       });
       await data.save();
 
@@ -421,6 +421,8 @@ export const PayoutDatable = async (req, res) => {
       query.push({ payoutFrequency: reqData.payoutFrequency });
     }
 
+    const positionList = PositionWiseData(req.user);
+
     const findQuery = [
       {
         $unwind: {
@@ -428,8 +430,28 @@ export const PayoutDatable = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-      { $match: query.length > 0 ? { $and: query } : {} },
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branchDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$branchDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          ...(positionList.length > 0 && { $and: positionList }),
+          ...(query.length > 0 && { $and: query }),
+        },
+      },
     ];
+
     const countData = await finance.aggregate([
       ...findQuery,
       {
@@ -477,6 +499,8 @@ export const ReedemDatable = async (req, res) => {
       query.push(BuildRegexQuery("name", reqData.name));
     }
 
+    const positionList = PositionWiseData(req.user);
+
     const findQuery = [
       {
         $unwind: {
@@ -484,7 +508,26 @@ export const ReedemDatable = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-      { $match: query.length > 0 ? { $and: query } : {} },
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branchDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$branchDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          ...(positionList.length > 0 && { $and: positionList }),
+          ...(query.length > 0 && { $and: query }),
+        },
+      },
     ];
     const countData = await finance.aggregate([
       ...findQuery,
@@ -538,8 +581,29 @@ export const MaturedDatatable = async (req, res) => {
     if (reqData.payoutFrequency) {
       query.push({ payoutFrequency: reqData.payoutFrequency });
     }
+    const positionList = PositionWiseData(req.user);
+    const positionQuery = [
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branchDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$branchDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: positionList.length > 0 ? { $and: positionList } : {},
+      },
+    ];
 
     const countData = await finance.aggregate([
+      ...positionQuery,
       { $match: query.length > 0 ? { $and: query } : {} },
       {
         $count: "count",
@@ -547,6 +611,7 @@ export const MaturedDatatable = async (req, res) => {
     ]);
 
     const data = await finance.aggregate([
+      ...positionQuery,
       { $match: query.length > 0 ? { $and: query } : {} },
       {
         $sort: reqData.sort || { name: 1 },

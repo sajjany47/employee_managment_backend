@@ -11,7 +11,6 @@ import {
 import Loan from "./loan.model.js";
 import mongoose from "mongoose";
 import {
-  DataWithEmployeeName,
   DisbursmentCalculate,
   EMICalculator,
   GenerateApplicationNumber,
@@ -30,7 +29,7 @@ import {
   WorkData,
 } from "./PersonalLoan.js";
 import { BuildRegexQuery, GLocalImage } from "../../utilis/utilis.js";
-import { Position } from "../employess/EmployeeConfig.js";
+import { Position, PositionWiseData } from "../employess/EmployeeConfig.js";
 import fs from "fs";
 import branch from "../branch/branch.model.js";
 import employee from "../employess/employee.model.js";
@@ -456,7 +455,6 @@ export const datatable = async (req, res, next) => {
     const limit = Number(reqData.limit);
     const start = page * limit - limit;
     const query = [{ applicationStaus: reqData.applicationStaus }];
-    const positionWise = [];
     const postion = req.user.position;
     if (reqData?.name) {
       query.push(BuildRegexQuery("name", reqData.name));
@@ -481,26 +479,8 @@ export const datatable = async (req, res, next) => {
         assignAgent: new mongoose.Types.ObjectId(req.user._id),
       });
     }
-    if (postion === Position.SM) {
-      positionWise.push({ "branchDetails.country": req.user.country });
-      positionWise.push({ "branchDetails.state": req.user.state });
-    }
-    if (postion === Position.CM) {
-      positionWise.push({ "branchDetails.country": req.user.country });
-      positionWise.push({ "branchDetails.state": req.user.state });
-      positionWise.push({ "branchDetails.city": req.user.city });
-    }
 
-    if (
-      postion === Position.BM ||
-      postion === Position.LM ||
-      postion === Position.LD ||
-      postion === Position.VD
-    ) {
-      positionWise.push({
-        branch: new mongoose.Types.ObjectId(req.user.branch),
-      });
-    }
+    const positionList = PositionWiseData(req.user);
 
     const findQuery = [
       {
@@ -521,6 +501,9 @@ export const datatable = async (req, res, next) => {
         },
       },
       {
+        $match: positionList.length > 0 ? { $and: positionList } : {},
+      },
+      {
         $lookup: {
           from: "loantypes",
           localField: "loanType",
@@ -533,9 +516,6 @@ export const datatable = async (req, res, next) => {
           path: "$loanDetails",
           preserveNullAndEmptyArrays: true,
         },
-      },
-      {
-        $match: positionWise.length > 0 ? { $and: positionWise } : {},
       },
       {
         $lookup: {

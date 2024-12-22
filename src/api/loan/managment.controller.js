@@ -11,13 +11,11 @@ import {
   FormatType,
   StateName,
 } from "./loan.config.js";
-import documentType from "../document/documentType.model.js";
 import document from "../document/document.model.js";
-import { Position, PositionWiseData } from "../employess/EmployeeConfig.js";
+import { PositionWiseData } from "../employess/EmployeeConfig.js";
 
 export const LoanManagList = async (req, res) => {
   try {
-    const position = req.user;
     let reqData = req.body;
     const page = Number(req.body.page);
     const limit = Number(req.body.limit);
@@ -176,8 +174,8 @@ export const LoanManagList = async (req, res) => {
 export const AgentList = async (req, res) => {
   try {
     const id = req.params.id;
-    const position = req.user;
 
+    const positionList = PositionWiseData(req.user);
     const list = await employee.aggregate([
       { $match: { branch: new mongoose.Types.ObjectId(id), isActive: true } },
       {
@@ -195,14 +193,10 @@ export const AgentList = async (req, res) => {
         },
       },
       {
-        $match: {
-          "branchDetails.country": position?.country
-            ? position?.country
-            : { $ne: "" },
-          "branchDetails.state": position.state ? position.state : { $ne: "" },
-          "branchDetails.city": position.city ? position.city : { $ne: "" },
-          "branchDetails.isActive": true,
-        },
+        $match:
+          positionList.length > 0
+            ? { $and: [...positionList, { "branchDetails.isActive": true }] }
+            : {},
       },
     ]);
 
@@ -334,6 +328,7 @@ export const PaymentDetails = async (req, res) => {
         },
       });
     }
+    const positionList = PositionWiseData(req.user);
     const details = await Loan.aggregate([
       {
         $match: req.body.loanId
@@ -357,14 +352,9 @@ export const PaymentDetails = async (req, res) => {
         },
       },
       {
-        $match: {
-          "branchDetails.country": position?.country
-            ? position?.country
-            : { $ne: "" },
-          "branchDetails.state": position.state ? position.state : { $ne: "" },
-          "branchDetails.city": position.city ? position.city : { $ne: "" },
-        },
+        $match: positionList.length > 0 ? { $and: positionList } : {},
       },
+
       {
         $lookup: {
           from: "employees",
@@ -628,6 +618,7 @@ export const PaidLoanList = async (req, res) => {
         },
       });
     }
+    const positionList = PositionWiseData(req.user);
     const findLoan = await Loan.aggregate([
       {
         $match: req.body.loanId
@@ -651,13 +642,7 @@ export const PaidLoanList = async (req, res) => {
         },
       },
       {
-        $match: {
-          "branchDetails.country": position?.country
-            ? position?.country
-            : { $ne: "" },
-          "branchDetails.state": position.state ? position.state : { $ne: "" },
-          "branchDetails.city": position.city ? position.city : { $ne: "" },
-        },
+        $match: positionList.length > 0 ? { $and: positionList } : {},
       },
       {
         $project: {
@@ -802,7 +787,7 @@ export const ApplicationView = async (req, res) => {
       }
       return item;
     });
-    console.log(a.documentVerifiedBy);
+
     const prepareData = {
       ...a,
       createdBy: await DataWithEmployeeName(a.createdBy),
