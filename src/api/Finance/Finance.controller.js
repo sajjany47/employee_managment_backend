@@ -365,9 +365,29 @@ export const InvestorDatatable = async (req, res) => {
         isInvestorActive: reqData.isInvestorActive,
       });
     }
+    const positionList = PositionWiseData(req.user);
 
     const data = await finance.aggregate([
-      { $match: query.length > 0 ? { $and: query } : {} },
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branchDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$branchDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          ...(positionList.length > 0 && { $and: positionList }),
+          ...(query.length > 0 && { $and: query }),
+        },
+      },
       {
         $facet: {
           count: [{ $count: "total" }],

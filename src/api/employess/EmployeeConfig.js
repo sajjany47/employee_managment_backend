@@ -88,7 +88,8 @@ export const PositionWiseData = (data) => {
     data.position === Position.BM ||
     data.position === Position.LM ||
     data.position === Position.LD ||
-    data.position === Position.VD
+    data.position === Position.VD ||
+    data.position === Position.FM
   ) {
     positionWise.push({
       branch: new mongoose.Types.ObjectId(data.branch),
