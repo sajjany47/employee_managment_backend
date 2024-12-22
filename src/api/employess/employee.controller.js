@@ -304,14 +304,14 @@ export const getDetails = async (req, res) => {
     const finalData = {
       ...findData,
       education:
-        findData.education.length > 0
+        findData?.education?.length > 0
           ? findData?.education?.map((item) => ({
               ...item,
               resultImageUrl: `${baseUrl}/uploads/employee/${item.resultImage}`,
             }))
           : [],
       workDetail:
-        findData.workDetail.length > 0
+        findData?.workDetail?.length > 0
           ? findData?.workDetail?.map((item) => ({
               ...item,
               experienceLetterUrl: `${baseUrl}/uploads/employee/${item.experienceLetter}`,
