@@ -3,6 +3,7 @@ import { createBranchSchema } from "./branch.schema.js";
 import branch from "./branch.model.js";
 import mongoose from "mongoose";
 import { BuildRegexQuery } from "../../utilis/utilis.js";
+import { GenerateBranchCode } from "./branch.config.js";
 
 export const createBranch = async (req, res) => {
   try {
@@ -22,12 +23,17 @@ export const createBranch = async (req, res) => {
           phone: validateData.phone,
           address: validateData.address,
           pincode: validateData.pincode,
-          code: validateData.code,
+          code: await GenerateBranchCode(
+            validateData.countryName,
+            validateData.stateName,
+            validateData.cityName,
+            validateData.pincode
+          ),
           countryName: validateData.countryName,
           stateName: validateData.stateName,
           cityName: validateData.cityName,
           isActive: true,
-          createdBy: req.user.username,
+          createdBy: req.user._id,
           updatedBy: null,
         });
 
@@ -63,7 +69,7 @@ export const updateBranch = async (req, res) => {
           countryName: validateData.countryName,
           stateName: validateData.stateName,
           cityName: validateData.cityName,
-          updatedBy: req.user.username,
+          updatedBy: req.user._id,
         };
 
         const branchUpdate = await branch.updateOne(
@@ -155,6 +161,7 @@ export const dataTable = async (req, res) => {
     return res.status(StatusCodes.OK).json({
       message: "Data fetched successfully",
       data: data[0].data,
+
       count: data[0].count[0] ? data[0].count[0].total : 0,
     });
   } catch (error) {

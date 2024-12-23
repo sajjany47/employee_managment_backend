@@ -10,6 +10,8 @@ import {
   documentUpload,
   getEMIDetails,
   getLoanDetail,
+  LeadAssignAgent,
+  LeadBulkUpload,
 } from "../api/loan/loan.controller.js";
 import {
   AddRemarkAgent,
@@ -53,5 +55,7 @@ LoanRoutes.route("/manage/payment").post(tokenValidation, PaymentDetails);
 LoanRoutes.route("/manage/paid-list").post(tokenValidation, PaidLoanList);
 LoanRoutes.route("/application-view/:id").get(tokenValidation, ApplicationView);
 LoanRoutes.route("/datatable").post(tokenValidation, datatable);
+LoanRoutes.route("/lead/bulk-upload").post(tokenValidation, LeadBulkUpload);
+LoanRoutes.route("/lead/assign-agent").post(tokenValidation, LeadAssignAgent);
 
 export default LoanRoutes;

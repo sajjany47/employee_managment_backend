@@ -23,6 +23,7 @@ const employeeSchema = new mongoose.Schema(
         Position.LD,
         Position.VD,
         Position.FM,
+        Position.CM,
       ],
     },
     branch: {
@@ -44,6 +45,7 @@ const employeeSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+    assignedLoansCount: { type: Number, default: 0 },
     password: String,
     sessionId: String,
     isPasswordReset: Boolean,
@@ -116,8 +118,8 @@ const employeeSchema = new mongoose.Schema(
     profileRatio: String,
     approvedBy: String,
     isActive: Boolean,
-    createdBy: String,
-    updatedBy: String,
+    createdBy: mongoose.Schema.Types.ObjectId,
+    updatedBy: mongoose.Schema.Types.ObjectId,
     pageIndex: Number,
   },
   {

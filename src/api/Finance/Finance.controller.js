@@ -8,9 +8,15 @@ import {
   payNowSchema,
   reedemApplySchema,
 } from "./finance.schema.js";
-import { PayoutFrequencies } from "./Finance.Config.js";
+import {
+  InvestmentList,
+  PayoutFrequencies,
+  PayoutFrequenciesList,
+} from "./Finance.Config.js";
 import moment from "moment";
 import { DataWithEmployeeName } from "../loan/loan.config.js";
+import ExcelJS from "exceljs";
+import { PositionWiseData } from "../employess/EmployeeConfig.js";
 
 export const financeCreate = async (req, res) => {
   try {
@@ -20,6 +26,7 @@ export const financeCreate = async (req, res) => {
       const data = new finance({
         ...prepareData,
         createdBy: req.user._id,
+        initialCapital: Number(prepareData.investmentAmount),
         planDetails: [
           {
             _id: new mongoose.Types.ObjectId(),
@@ -34,7 +41,6 @@ export const financeCreate = async (req, res) => {
           },
         ],
         payoutReedem: [],
-        payoutSchedule: [],
       });
       await data.save();
 
@@ -71,6 +77,7 @@ export const financeUpdate = async (req, res) => {
             Number(findInvestor.investmentAmount)
         ) {
           data.isMaturityCompleted = false;
+
           data.planDetails = [
             ...findInvestor.planDetails,
             {
@@ -85,6 +92,7 @@ export const financeUpdate = async (req, res) => {
               updatedBy: new mongoose.Types.ObjectId(req.user._id),
             },
           ];
+          data.initialCapital = Number(data.investmentAmount);
         }
         await finance.updateOne(
           { _id: new mongoose.Types.ObjectId(validData._id) },
@@ -281,9 +289,9 @@ export const financeReedemApply = async (req, res) => {
             $push: {
               payoutReedem: {
                 _id: new mongoose.Types.ObjectId(),
-                reedemAmount: validData.reedemAmount,
+                reedemAmount: Number(validData.reedemAmount),
                 reedemDate: new Date(validData.reedemDate),
-                remainingInvestAmount: validData.remainingInvestAmount,
+                remainingInvestAmount: Number(validData.remainingInvestAmount),
                 isPaid: false,
                 paidOn: null,
                 transactionNumber: null,
@@ -357,9 +365,29 @@ export const InvestorDatatable = async (req, res) => {
         isInvestorActive: reqData.isInvestorActive,
       });
     }
+    const positionList = PositionWiseData(req.user);
 
     const data = await finance.aggregate([
-      { $match: query.length > 0 ? { $and: query } : {} },
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branchDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$branchDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          ...(positionList.length > 0 && { $and: positionList }),
+          ...(query.length > 0 && { $and: query }),
+        },
+      },
       {
         $facet: {
           count: [{ $count: "total" }],
@@ -413,6 +441,8 @@ export const PayoutDatable = async (req, res) => {
       query.push({ payoutFrequency: reqData.payoutFrequency });
     }
 
+    const positionList = PositionWiseData(req.user);
+
     const findQuery = [
       {
         $unwind: {
@@ -420,8 +450,28 @@ export const PayoutDatable = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-      { $match: query.length > 0 ? { $and: query } : {} },
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branchDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$branchDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          ...(positionList.length > 0 && { $and: positionList }),
+          ...(query.length > 0 && { $and: query }),
+        },
+      },
     ];
+
     const countData = await finance.aggregate([
       ...findQuery,
       {
@@ -469,6 +519,8 @@ export const ReedemDatable = async (req, res) => {
       query.push(BuildRegexQuery("name", reqData.name));
     }
 
+    const positionList = PositionWiseData(req.user);
+
     const findQuery = [
       {
         $unwind: {
@@ -476,7 +528,26 @@ export const ReedemDatable = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-      { $match: query.length > 0 ? { $and: query } : {} },
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branchDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$branchDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          ...(positionList.length > 0 && { $and: positionList }),
+          ...(query.length > 0 && { $and: query }),
+        },
+      },
     ];
     const countData = await finance.aggregate([
       ...findQuery,
@@ -530,8 +601,29 @@ export const MaturedDatatable = async (req, res) => {
     if (reqData.payoutFrequency) {
       query.push({ payoutFrequency: reqData.payoutFrequency });
     }
+    const positionList = PositionWiseData(req.user);
+    const positionQuery = [
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branchDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$branchDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: positionList.length > 0 ? { $and: positionList } : {},
+      },
+    ];
 
     const countData = await finance.aggregate([
+      ...positionQuery,
       { $match: query.length > 0 ? { $and: query } : {} },
       {
         $count: "count",
@@ -539,6 +631,7 @@ export const MaturedDatatable = async (req, res) => {
     ]);
 
     const data = await finance.aggregate([
+      ...positionQuery,
       { $match: query.length > 0 ? { $and: query } : {} },
       {
         $sort: reqData.sort || { name: 1 },
@@ -553,6 +646,146 @@ export const MaturedDatatable = async (req, res) => {
       data: data,
       count: countData.length > 0 ? countData[0].count : 0,
     });
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+export const downloadInvestorExcelFile = async (req, res, next) => {
+  try {
+    const headers = [
+      "Name",
+      "Mobile",
+      "Email",
+      "DOB",
+      "Aadhar Number",
+      "Pan Number",
+      "Investment Type",
+      "Investment Amount",
+      "Duration (In months)",
+      "Interest Rate/Month",
+      "Payout Frequency",
+      "Payout Date",
+      "IFSC Code",
+      "Bank Name",
+      "Branch Name",
+      "Account Number",
+      "Account Name",
+    ];
+
+    const investmentArray = InvestmentList.map((item) => item.label);
+    const payoutArray = PayoutFrequenciesList.map((item) => item.label);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Sheet1");
+
+    const headerRow = worksheet.addRow(headers);
+    headerRow.eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFFFC000" }, // Background color (gold)
+      };
+      cell.font = {
+        bold: true,
+        color: { argb: "FFFFFFFF" }, // Font color (white)
+      };
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+    });
+    worksheet.columns = headers.map(() => ({ width: 25 }));
+    worksheet.dataValidations.add("G1:G1048576", {
+      type: "list",
+      allowBlank: false,
+      formulae: [`"${investmentArray.join(",")}"`],
+      showErrorMessage: true,
+      errorTitle: "Invalid Input",
+      error: "Please select a valid investment type from the dropdown.",
+    });
+    worksheet.dataValidations.add("K1:K1048576", {
+      type: "list",
+      allowBlank: false,
+      formulae: [`"${payoutArray.join(",")}"`],
+      showErrorMessage: true,
+      errorTitle: "Invalid Input",
+      error: "Please select a valid payout frequency from the dropdown.",
+    });
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=" + "Investor.xlsx"
+    );
+    workbook.xlsx.write(res).then(() => res.end());
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+export const readInvestorExcelFile = async (req, res) => {
+  try {
+    const file = req.files;
+    const excelFile = file.files;
+
+    const workBook = new ExcelJS.Workbook();
+    await workBook.xlsx.load(excelFile.data);
+    const worksheet = workBook.worksheets[0];
+    const headers = [];
+    const rows = [];
+
+    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      if (rowNumber === 1) {
+        row.eachCell((cell, colNumber) => {
+          headers.push(cell.value);
+        });
+      } else {
+        const rowData = {};
+        row.eachCell((cell, colNumber) => {
+          rowData[headers[colNumber - 1]] = cell.value;
+        });
+        rows.push(rowData);
+      }
+    });
+
+    const prepareData = rows.map((item) => {
+      const filterInvestment = InvestmentList.find(
+        (elm) => elm.label === item["Investment Type"]
+      );
+
+      const manageData = DataManage({
+        name: item.Name,
+        mobile: item.Mobile,
+        email: item.Email.text,
+        dob: moment(item.DOB, "DD-MM-YYYY").format(),
+        investmentType: filterInvestment.value,
+        investmentAmount: item["Investment Amount"],
+        duration: item["Duration (In months)"],
+        interestRate: item["Interest Rate/Month"],
+        payoutFrequency: item["Payout Frequency"],
+        payoutDate: moment(item["Payout Date"], "DD-MM-YYYY"),
+        accountNumber: item["Account Number"],
+        bankName: item["Bank Name"],
+        bankBranchName: item["Branch Name"],
+        ifsc: item["IFSC Code"],
+        accountName: item["Account Name"],
+        panNumber: item["Pan Number"].toUpperCase(),
+        aadharNumber: item["Aadhar Number"],
+      });
+
+      return manageData;
+    });
+    // await finance.insertMany(prepareData);
+    return res
+      .status(200)
+      .json({ message: "Investor uploaded successfully", data: prepareData });
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+export const insertManyWithExcel = async (req, res) => {
+  try {
+    await finance.insertMany(req.body.data);
+    res
+      .status(200)
+      .json({ message: "Investor uploaded successfully", data: req.body.data });
   } catch (error) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }

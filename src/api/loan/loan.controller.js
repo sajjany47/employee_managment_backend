@@ -15,6 +15,7 @@ import {
   EMICalculator,
   GenerateApplicationNumber,
   LoanApplicationStepsEnum,
+  LoanDivide,
   LoanImageUpload,
   LoanStatusEnum,
 } from "./loan.config.js";
@@ -27,14 +28,11 @@ import {
   StatusData,
   WorkData,
 } from "./PersonalLoan.js";
-import {
-  BuildRegexQuery,
-  GetFileName,
-  GLocalImage,
-} from "../../utilis/utilis.js";
-import { Position } from "../employess/EmployeeConfig.js";
+import { BuildRegexQuery, GLocalImage } from "../../utilis/utilis.js";
+import { Position, PositionWiseData } from "../employess/EmployeeConfig.js";
 import fs from "fs";
-import charges from "../charges/charges.model.js";
+import branch from "../branch/branch.model.js";
+import employee from "../employess/employee.model.js";
 
 export const ApplicationCreate = async (req, res) => {
   try {
@@ -60,7 +58,7 @@ export const ApplicationCreate = async (req, res) => {
           : "";
       const LeadCreate = new Loan({
         ...data,
-        loanAllotAgent: req.user._id,
+        leadAssignAgent: req.user._id,
         applicationNumber:
           validateData.applicationType === "lead"
             ? `L-${GenerateApplicationNumber(findLoanDetails.entity)}`
@@ -70,6 +68,25 @@ export const ApplicationCreate = async (req, res) => {
       });
 
       const applicationSave = await LeadCreate.save();
+
+      if (applicationSave) {
+        if (req.user.position !== Position.LD) {
+          const selectEmployee = await LoanDivide(
+            Position.LD,
+            validateData.branch
+          );
+          if (selectEmployee) {
+            await loanType.updateOne(
+              { _id: new mongoose.Types.ObjectId(applicationSave._id) },
+              {
+                $set: {
+                  assignAgent: new mongoose.Types.ObjectId(selectEmployee),
+                },
+              }
+            );
+          }
+        }
+      }
 
       res.status(StatusCodes.OK).json({
         data: applicationSave,
@@ -104,10 +121,10 @@ export const ApplicationUpdate = async (req, res) => {
         : "";
     let validateData = await validationSchema.validate(req.body);
     if (validateData) {
+      const findLoanApplication = await Loan.findOne({
+        _id: new mongoose.Types.ObjectId(validateData._id),
+      });
       if (validateData.status === LoanApplicationStepsEnum.DISBURSED) {
-        const findLoanApplication = await Loan.findOne({
-          _id: new mongoose.Types.ObjectId(validateData._id),
-        });
         validateData = {
           ...validateData,
           loanAmount: findLoanApplication.loanAmount,
@@ -119,7 +136,7 @@ export const ApplicationUpdate = async (req, res) => {
         type === "lead"
           ? await LeadData(validateData)
           : type === "basic"
-          ? await BasicData(validateData)
+          ? await BasicData({ ...validateData, operationBy: req.user._id })
           : type === "address"
           ? await AddressData(validateData)
           : type === "work"
@@ -131,7 +148,10 @@ export const ApplicationUpdate = async (req, res) => {
               status: LoanApplicationStepsEnum.INCOMPLETED,
             }
           : type === "account"
-          ? await AccountData(validateData)
+          ? await AccountData({
+              ...validateData,
+              branch: findLoanApplication.branch,
+            })
           : type === "status"
           ? await StatusData({ ...validateData, user: req.user._id })
           : "";
@@ -140,7 +160,50 @@ export const ApplicationUpdate = async (req, res) => {
         { _id: new mongoose.Types.ObjectId(validateData._id) },
         { $set: { ...data, updatedBy: req.user._id } }
       );
+      if (updateData && (type === "status" || type === "account")) {
+        let assignAgent = "";
+        if (type === "account") {
+          const selectEmployee = await LoanDivide(
+            Position.VD,
+            findLoanApplication.branch
+          );
+          if (selectEmployee) {
+            assignAgent = selectEmployee;
+          }
+        }
 
+        if (type === "status") {
+          if (data.status === LoanApplicationStepsEnum.DOCUMENT_VERIFICATION) {
+            const selectEmployee = await LoanDivide(
+              Position.BM,
+              findLoanApplication.branch
+            );
+            if (selectEmployee) {
+              assignAgent = selectEmployee;
+            }
+          }
+          if (data.status === LoanApplicationStepsEnum.LOAN_APPROVED) {
+            const selectEmployee = await LoanDivide(
+              Position.FM,
+              findLoanApplication.branch
+            );
+            if (selectEmployee) {
+              assignAgent = selectEmployee;
+            }
+          }
+        }
+
+        if (assignAgent !== "") {
+          await loanType.updateOne(
+            { _id: new mongoose.Types.ObjectId(validateData._id) },
+            {
+              $set: {
+                assignAgent: new mongoose.Types.ObjectId(assignAgent),
+              },
+            }
+          );
+        }
+      }
       res.status(StatusCodes.OK).json({
         data: updateData,
         message: `${
@@ -391,8 +454,7 @@ export const datatable = async (req, res, next) => {
     const page = Number(reqData.page);
     const limit = Number(reqData.limit);
     const start = page * limit - limit;
-    const query = [];
-    const positionWise = [];
+    const query = [{ applicationStaus: reqData.applicationStaus }];
     const postion = req.user.position;
     if (reqData?.name) {
       query.push(BuildRegexQuery("name", reqData.name));
@@ -412,40 +474,17 @@ export const datatable = async (req, res, next) => {
       query.push({ branch: new mongoose.Types.ObjectId(reqData.branch) });
     }
 
-    if (postion === Position.SM) {
-      positionWise.push({ "branchDetails.country": req.user.country });
-      positionWise.push({ "branchDetails.state": req.user.state });
-    }
-    if (postion === Position.CM) {
-      positionWise.push({ "branchDetails.country": req.user.country });
-      positionWise.push({ "branchDetails.state": req.user.state });
-      positionWise.push({ "branchDetails.city": req.user.city });
-    }
-
-    if (
-      postion === Position.BM ||
-      postion === Position.LM ||
-      postion === Position.LD ||
-      postion === Position.VD
-    ) {
-      positionWise.push({
-        branch: new mongoose.Types.ObjectId(req.user.branch),
+    if (postion === Position.LD) {
+      query.push({
+        assignAgent: new mongoose.Types.ObjectId(req.user._id),
       });
     }
 
-    const queryHandel =
-      query.length > 0
-        ? {
-            applicationStaus: reqData.applicationStaus,
-            $and: query,
-          }
-        : {
-            applicationStaus: reqData.applicationStaus,
-          };
+    const positionList = PositionWiseData(req.user);
 
     const findQuery = [
       {
-        $match: queryHandel,
+        $match: { $and: query },
       },
       {
         $lookup: {
@@ -462,6 +501,9 @@ export const datatable = async (req, res, next) => {
         },
       },
       {
+        $match: positionList.length > 0 ? { $and: positionList } : {},
+      },
+      {
         $lookup: {
           from: "loantypes",
           localField: "loanType",
@@ -476,7 +518,18 @@ export const datatable = async (req, res, next) => {
         },
       },
       {
-        $match: positionWise.length > 0 ? { $and: positionWise } : {},
+        $lookup: {
+          from: "employees",
+          localField: "assignAgent",
+          foreignField: "_id",
+          as: "assignAgent",
+        },
+      },
+      {
+        $unwind: {
+          path: "$assignAgent",
+          preserveNullAndEmptyArrays: true,
+        },
       },
     ];
 
@@ -497,9 +550,141 @@ export const datatable = async (req, res, next) => {
 
     return res.status(StatusCodes.OK).json({
       message: "Data fetched successfully",
+      // data: await Promise.all(
+      //   data.map(async (item) => ({
+      //     ...item,
+      //     assignAgent: item.assignAgent
+      //       ? await DataWithEmployeeName(item.assignAgent)
+      //       : "",
+      //   }))
+      // ),
       data: data,
+
       count: totalCount,
     });
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+export const LeadBulkUpload = async (req, res, next) => {
+  try {
+    const reqData = req.body.data;
+
+    const branchList = await branch.find({ isActive: true });
+
+    const errorData = reqData.filter(
+      (item1) => !branchList.some((item2) => item1.branch === item2.code)
+    );
+
+    if (errorData.length === 0) {
+      const prepareData = [];
+      for (let index = 0; index < reqData.length; index++) {
+        const element = reqData[index];
+        const findLoanDetails = await loanType.findOne({
+          _id: new mongoose.Types.ObjectId(element.loanType._id),
+        });
+        for (let i = 0; i < branchList.length; i++) {
+          const branch = branchList[i];
+          if (element.branch === branch.code) {
+            const leadModifyData = LeadData({
+              ...element,
+              loanType: element.loanType._id,
+              branch: branch._id,
+            });
+
+            prepareData.push({
+              _id: new mongoose.Types.ObjectId(),
+              ...leadModifyData,
+              loanAmount: leadModifyData.loanAmount
+                ? Number(leadModifyData.loanAmount)
+                : 28000,
+              loanTenure: Number(leadModifyData.loanTenure),
+              applicationNumber: `L-${GenerateApplicationNumber(
+                findLoanDetails.entity
+              )}`,
+              createdBy: req.user._id,
+            });
+          }
+        }
+      }
+
+      const updateLead = await Loan.insertMany(prepareData);
+
+      if (updateLead) {
+        for (let index = 0; index < prepareData.length; index++) {
+          const element = prepareData[index];
+          const selectEmployee = await LoanDivide(Position.LD, element.branch);
+          if (selectEmployee) {
+            await Loan.updateOne(
+              { _id: new mongoose.Types.ObjectId(element._id) },
+              {
+                $set: {
+                  assignAgent: new mongoose.Types.ObjectId(selectEmployee),
+                },
+              }
+            );
+          }
+        }
+      }
+      return res.status(200).json({ message: "Data inserted successfully" });
+    } else {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "Branch not found", data: errorData });
+    }
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+  }
+};
+
+export const LeadAssignAgent = async (req, res, next) => {
+  try {
+    const reqData = req.body;
+    if (reqData.type === "single") {
+      const updateLead = await Loan.updateOne(
+        { _id: new mongoose.Types.ObjectId(reqData.leadId[0].id) },
+        {
+          $set: {
+            assignAgent: new mongoose.Types.ObjectId(reqData.agentId.id),
+          },
+        }
+      );
+
+      if (updateLead) {
+        const findEmployee = await employee.findOne({
+          _id: new mongoose.Types.ObjectId(reqData.agentId.id),
+        });
+        if (findEmployee) {
+          await employee.updateOne(
+            { _id: new mongoose.Types.ObjectId(reqData.agentId.id) },
+            {
+              $set: {
+                assignedLoansCount: findEmployee.assignedLoansCount + 1,
+              },
+            }
+          );
+        }
+      }
+    } else {
+      for (let index = 0; index < reqData.leadId.length; index++) {
+        const lead = reqData.leadId[index];
+
+        if (lead.branchId.toString() === reqData.agentId.branchId.toString()) {
+          await Loan.updateOne(
+            { _id: new mongoose.Types.ObjectId(lead.id) },
+            {
+              $set: {
+                assignAgent: new mongoose.Types.ObjectId(reqData.agentId.id),
+              },
+            }
+          );
+        }
+      }
+    }
+    return res
+      .status(StatusCodes.OK)
+      .json({ message: "Lead assign sucessfully" });
   } catch (error) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }

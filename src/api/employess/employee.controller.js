@@ -9,6 +9,7 @@ import {
   EmployeeDocumentImageUpload,
   EmployeeImageUpload,
   Position,
+  PositionWiseData,
   Status,
 } from "./EmployeeConfig.js";
 import {
@@ -19,7 +20,6 @@ import {
   generateRefreshToken,
   GetFileName,
   GLocalImage,
-  ImageUpload,
   MailSend,
 } from "../../utilis/utilis.js";
 import bcrypt from "bcrypt";
@@ -40,6 +40,7 @@ import {
   DataWithEmployeeName,
   StateName,
 } from "../loan/loan.config.js";
+import position from "../access-control/position.model.js";
 
 export const adminSignUpSchemaFirst = async (req, res) => {
   try {
@@ -303,14 +304,14 @@ export const getDetails = async (req, res) => {
     const finalData = {
       ...findData,
       education:
-        findData.education.length > 0
+        findData?.education?.length > 0
           ? findData?.education?.map((item) => ({
               ...item,
               resultImageUrl: `${baseUrl}/uploads/employee/${item.resultImage}`,
             }))
           : [],
       workDetail:
-        findData.workDetail.length > 0
+        findData?.workDetail?.length > 0
           ? findData?.workDetail?.map((item) => ({
               ...item,
               experienceLetterUrl: `${baseUrl}/uploads/employee/${item.experienceLetter}`,
@@ -481,6 +482,17 @@ export const login = async (req, res) => {
           validUser.password
         );
         if (verifyPassword) {
+          const positionDetails = await position.aggregate([
+            { $match: { key: validUser.position } },
+            {
+              $lookup: {
+                from: "access_controls",
+                localField: "menu",
+                foreignField: "childMenu._id",
+                as: "menuDetails",
+              },
+            },
+          ]);
           const baseUrl = req.protocol + "://" + req.get("host");
           const sessionID = nanoid();
           const data = {
@@ -494,7 +506,9 @@ export const login = async (req, res) => {
             state: validUser.state,
             isPasswordReset: validUser.isPasswordReset,
             sessionId: sessionID,
-            userImage: `${baseUrl}/uploads/employee/${validUser.userImage}`,
+            userImage: validUser.userImage
+              ? `${baseUrl}/uploads/employee/${validUser.userImage}`
+              : null,
           };
           const accessToken = generateAccessToken(data);
           const refreshToken = generateRefreshToken(data);
@@ -511,7 +525,15 @@ export const login = async (req, res) => {
             .json({
               message: "Data fetched successfully",
               data: {
-                data: data,
+                data: {
+                  ...data,
+                  menu: positionDetails[0].menuDetails.sort((a, b) => {
+                    if (a.name < b.name) return -1;
+                    if (a.name > b.name) return 1;
+                    return 0;
+                  }),
+                  positionName: positionDetails[0].name,
+                },
                 accessToken: accessToken,
                 refreshToken: refreshToken,
               },
@@ -647,6 +669,7 @@ export const EmployeeView = async (req, res) => {
         },
       },
     ]);
+    const baseUrl = req.protocol + "://" + req.get("host");
     const data = findEmployee[0];
     const modifyData = {
       ...data,
@@ -672,6 +695,44 @@ export const EmployeeView = async (req, res) => {
         : null,
       residenceCity: data.residenceCity
         ? await CityName(data.residenceCity)
+        : null,
+      education:
+        data.education.length > 0
+          ? data?.education?.map((item) => ({
+              ...item,
+              resultImageUrl: `${baseUrl}/uploads/employee/${item.resultImage}`,
+            }))
+          : [],
+      workDetail:
+        data.workDetail.length > 0
+          ? data?.workDetail?.map((item) => ({
+              ...item,
+              experienceLetterUrl: `${baseUrl}/uploads/employee/${item.experienceLetter}`,
+              relievingLetterUrl: `${baseUrl}/uploads/employee/${item.relievingLetter}`,
+              appointmentLetterUrl: `${baseUrl}/uploads/employee/${item.appointmentLetter}`,
+              salarySlipUrl: `${baseUrl}/uploads/employee/${item.salarySlip}`,
+            }))
+          : [],
+      userImageUrl: data.userImage
+        ? `${baseUrl}/uploads/employee/${data.userImage}`
+        : null,
+      aadharImageUrl: data.aadharImage
+        ? `${baseUrl}/uploads/employee/${data.aadharImage}`
+        : null,
+      panImageUrl: data.panImage
+        ? `${baseUrl}/uploads/employee/${data.panImage}`
+        : null,
+      passportImageUrl: data.passportImage
+        ? `${baseUrl}/uploads/employee/${data.passportImage}`
+        : null,
+      voterImageUrl: data.voterImage
+        ? `${baseUrl}/uploads/employee/${data.voterImage}`
+        : null,
+      uanImageUrl: data.uanImage
+        ? `${baseUrl}/uploads/employee/${data.uanImage}`
+        : null,
+      passbookImageUrl: data.passbookImage
+        ? `${baseUrl}/uploads/employee/${data.passbookImage}`
         : null,
     };
 
@@ -711,25 +772,29 @@ export const dataTable = async (req, res) => {
         isActive: reqData.isActive,
       });
     }
+    const positionList = PositionWiseData(req.user);
     const findQuery = [
       {
         $lookup: {
           from: "branches",
           localField: "branch",
           foreignField: "_id",
-          as: "branch",
+          as: "branchDetails",
         },
       },
       {
         $unwind: {
-          path: "$branch",
+          path: "$branchDetails",
           preserveNullAndEmptyArrays: true,
         },
       },
       {
+        $match: positionList.length > 0 ? { $and: positionList } : {},
+      },
+      {
         $project: {
-          branch: "$branch.name",
-          branchCode: "$branch.code",
+          branch: "$branchDetails.name",
+          branchCode: "$branchDetails.code",
           employeeId: 1,
           name: 1,
           username: 1,
@@ -739,7 +804,12 @@ export const dataTable = async (req, res) => {
       },
       { $match: query.length > 0 ? { $and: query } : {} },
     ];
-    const countData = await employee.countDocuments([...findQuery]);
+    const countData = await employee.aggregate([
+      ...findQuery,
+      {
+        $count: "count",
+      },
+    ]);
     const data = await employee.aggregate([
       ...findQuery,
       {
@@ -753,7 +823,7 @@ export const dataTable = async (req, res) => {
     return res.status(StatusCodes.OK).json({
       message: "Data fetched successfully",
       data: data,
-      count: countData,
+      count: countData.length > 0 ? countData[0].count : 0,
     });
   } catch (error) {
     res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });

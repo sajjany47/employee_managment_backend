@@ -48,6 +48,7 @@ export const DataManage = (data) => {
     accountNumber: data.accountNumber,
     bankName: data.bankName,
     bankBranchName: data.bankBranchName,
+    branch: data.branch,
     ifsc: data.ifsc,
     accountName: data.accountName,
     panNumber: data.panNumber,

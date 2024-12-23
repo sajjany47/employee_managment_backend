@@ -9,5 +9,4 @@ export const createBranchSchema = Yup.object().shape({
   phone: Yup.string().required("Phone is required"),
   address: Yup.string().required("Address is required"),
   pincode: Yup.string().required("Pincode is required"),
-  code: Yup.string().required("Code is required"),
 });

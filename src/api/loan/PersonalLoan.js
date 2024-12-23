@@ -37,6 +37,7 @@ export const BasicData = (data) => {
     activeIndex: 0,
     applicationStaus: LoanStatusEnum.INCOMPLETED,
     status: LoanApplicationStepsEnum.INCOMPLETED,
+    loanAllotAgent: new mongoose.Types.ObjectId(data.operationBy),
   };
 
   return prepareData;
@@ -120,10 +121,6 @@ export const StatusData = async (data) => {
     status: data.status,
     remark: data.remark,
   };
-
-  if (data.loanAllotAgent) {
-    prepareData.loanAllotAgent = data.user;
-  }
 
   if (data.status === LoanApplicationStepsEnum.DOCUMENT_ADDRESS_VERIFICATION) {
     prepareData.addressVerifiedBy = data.user;

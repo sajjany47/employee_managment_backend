@@ -11,12 +11,11 @@ import {
   FormatType,
   StateName,
 } from "./loan.config.js";
-import documentType from "../document/documentType.model.js";
 import document from "../document/document.model.js";
+import { PositionWiseData } from "../employess/EmployeeConfig.js";
 
 export const LoanManagList = async (req, res) => {
   try {
-    const position = req.user;
     let reqData = req.body;
     const page = Number(req.body.page);
     const limit = Number(req.body.limit);
@@ -49,6 +48,7 @@ export const LoanManagList = async (req, res) => {
     if (reqData?.branch) {
       searchQuery.push({ branch: new mongoose.Types.ObjectId(reqData.branch) });
     }
+    const positionList = PositionWiseData(req.user);
     const query = [
       { $match: { $and: searchQuery } },
       {
@@ -66,16 +66,7 @@ export const LoanManagList = async (req, res) => {
         },
       },
       {
-        $match: {
-          "branchDetails.country": position?.country
-            ? position?.country
-            : { $ne: "" },
-          "branchDetails.state": position.state ? position.state : { $ne: "" },
-          "branchDetails.city": position.city ? position.city : { $ne: "" },
-          "branchDetails.id": position.branch
-            ? new mongoose.Types.ObjectId(position.branch)
-            : { $ne: "" },
-        },
+        $match: positionList.length > 0 ? { $and: positionList } : {},
       },
       {
         $addFields: {
@@ -183,10 +174,10 @@ export const LoanManagList = async (req, res) => {
 export const AgentList = async (req, res) => {
   try {
     const id = req.params.id;
-    const position = req.user;
 
+    const positionList = PositionWiseData(req.user);
     const list = await employee.aggregate([
-      { $match: { branch: new mongoose.Types.ObjectId(id) } },
+      { $match: { branch: new mongoose.Types.ObjectId(id), isActive: true } },
       {
         $lookup: {
           from: "branches",
@@ -202,13 +193,10 @@ export const AgentList = async (req, res) => {
         },
       },
       {
-        $match: {
-          "branchDetails.country": position?.country
-            ? position?.country
-            : { $ne: "" },
-          "branchDetails.state": position.state ? position.state : { $ne: "" },
-          "branchDetails.city": position.city ? position.city : { $ne: "" },
-        },
+        $match: positionList.length > 0 ? { $and: [...positionList] } : {},
+      },
+      {
+        $match: { "branchDetails.isActive": true },
       },
     ]);
 
@@ -340,6 +328,7 @@ export const PaymentDetails = async (req, res) => {
         },
       });
     }
+    const positionList = PositionWiseData(req.user);
     const details = await Loan.aggregate([
       {
         $match: req.body.loanId
@@ -363,14 +352,9 @@ export const PaymentDetails = async (req, res) => {
         },
       },
       {
-        $match: {
-          "branchDetails.country": position?.country
-            ? position?.country
-            : { $ne: "" },
-          "branchDetails.state": position.state ? position.state : { $ne: "" },
-          "branchDetails.city": position.city ? position.city : { $ne: "" },
-        },
+        $match: positionList.length > 0 ? { $and: positionList } : {},
       },
+
       {
         $lookup: {
           from: "employees",
@@ -390,6 +374,7 @@ export const PaymentDetails = async (req, res) => {
           emiSchedule: 1,
           loanId: "$_id",
           _id: 0,
+          loanCharges: 1,
           applicationNumber: "$applicationNumber",
           loanAmount: "$loanAmount",
           mobile: "$mobile",
@@ -453,7 +438,7 @@ export const PaymentDetails = async (req, res) => {
       {
         $lookup: {
           from: "charges",
-          localField: "charges",
+          localField: "loanCharges",
           foreignField: "_id",
           as: "charges",
         },
@@ -633,6 +618,7 @@ export const PaidLoanList = async (req, res) => {
         },
       });
     }
+    const positionList = PositionWiseData(req.user);
     const findLoan = await Loan.aggregate([
       {
         $match: req.body.loanId
@@ -656,13 +642,7 @@ export const PaidLoanList = async (req, res) => {
         },
       },
       {
-        $match: {
-          "branchDetails.country": position?.country
-            ? position?.country
-            : { $ne: "" },
-          "branchDetails.state": position.state ? position.state : { $ne: "" },
-          "branchDetails.city": position.city ? position.city : { $ne: "" },
-        },
+        $match: positionList.length > 0 ? { $and: positionList } : {},
       },
       {
         $project: {
@@ -796,22 +776,17 @@ export const ApplicationView = async (req, res) => {
         documentNumber: doc.documentNumber,
       };
     });
-
     const documentFullList = await document.find({});
-    const documentNameList = [];
-    for (let index = 0; index < documentFullList.length; index++) {
-      const element = documentFullList[index];
-      for (let index = 0; index < modifyDocument.length; index++) {
-        const item = modifyDocument[index];
+    const documentNameList = modifyDocument.map((item) => {
+      const matchedDocument = documentFullList.find(
+        (element) => item.documentType === element._id.toString()
+      );
 
-        if (element._id.toString() === item.documentType) {
-          documentNameList.push({
-            ...item,
-            documentType: element.documentName,
-          });
-        }
+      if (matchedDocument) {
+        return { ...item, documentType: matchedDocument.documentName };
       }
-    }
+      return item;
+    });
 
     const prepareData = {
       ...a,
@@ -830,8 +805,8 @@ export const ApplicationView = async (req, res) => {
       officeOrBussinessVerifiedBy: a?.officeOrBussinessVerifiedBy
         ? await DataWithEmployeeName(a.officeOrBussinessVerifiedBy)
         : null,
-      documentVerifiedBy: (await a?.documentVerifiedBy)
-        ? DataWithEmployeeName(a.documentVerifiedBy)
+      documentVerifiedBy: a?.documentVerifiedBy
+        ? await DataWithEmployeeName(a.documentVerifiedBy)
         : null,
       document: documentNameList,
       permanentCountry: a.permanentCountry

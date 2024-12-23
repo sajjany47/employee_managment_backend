@@ -5,6 +5,7 @@ import fs from "fs";
 import employee from "../employess/employee.model.js";
 import { City, Country, State } from "../Regional/Regional.model.js";
 import charges from "../charges/charges.model.js";
+import { Position } from "../employess/EmployeeConfig.js";
 
 export const EmployeeTypes = ["salaried", "self_employed", "business"];
 
@@ -249,13 +250,16 @@ export const AcccessPositionWise = (user) => {
 };
 
 export const DataWithEmployeeName = async (id) => {
-  const employeeArray = await employee.find({});
-  const findEmployee = employeeArray.find(
-    (item) => item._id.toString() === id.toString()
-  );
-  const data = { name: findEmployee.name, username: findEmployee.username };
-
-  return data;
+  const findEmployee = await employee.findOne({
+    _id: new mongoose.Types.ObjectId(id),
+  });
+  if (findEmployee) {
+    return {
+      _id: findEmployee._id,
+      name: findEmployee.name,
+      username: findEmployee.username,
+    };
+  }
 };
 
 export const CountryName = async (id) => {
@@ -278,6 +282,23 @@ export const CityName = async (id) => {
 export const FormatType = (str) => {
   // Replace underscores with spaces and capitalize each word
   return str.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+export const LoanDivide = async (postion, branch) => {
+  const employeeList = await employee
+    .find({
+      isActive: true,
+      position: postion,
+      branch: new mongoose.Types.ObjectId(branch),
+    })
+    .sort({ assignedLoansCount: 1 });
+  if (employeeList) {
+    await employee.updateOne(
+      { _id: new mongoose.Types.ObjectId(employeeList[0]._id) },
+      { $set: { assignedLoansCount: employeeList[0].assignedLoansCount + 1 } }
+    );
+    return employeeList[0]._id;
+  }
 };
 
 // const myPincode = 700053;

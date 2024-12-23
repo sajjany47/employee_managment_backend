@@ -15,8 +15,8 @@ const branchModel = new mongoose.Schema(
     pincode: String,
     code: String,
     isActive: Boolean,
-    createdBy: String,
-    updatedBy: String,
+    createdBy: mongoose.Schema.Types.ObjectId,
+    updatedBy: mongoose.Schema.Types.ObjectId,
   },
   {
     timestamps: true,
