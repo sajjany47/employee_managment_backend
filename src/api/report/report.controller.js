@@ -3,13 +3,32 @@ import finance from "../Finance/finance.model.js";
 import Loan from "../loan/loan.model.js";
 import { MonthNameAdd } from "./report.config.js";
 import moment from "moment";
+import { PositionWiseData } from "../employess/EmployeeConfig.js";
 
 export const financialReport = async (req, res) => {
   try {
     const startDate = new Date(req.body.startDate);
     const endDate = new Date(req.body.endDate);
 
+    const positionList = PositionWiseData(req.user);
     const result = await finance.aggregate([
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branchDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$branchDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: positionList.length > 0 ? { $and: positionList } : {},
+      },
       {
         $facet: {
           totalInvestor: [{ $count: "total" }],
@@ -257,8 +276,25 @@ export const loanPerformance = async (req, res) => {
         },
       },
     ];
-
+    const positionList = PositionWiseData(req.user);
     const result = await Loan.aggregate([
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branchDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$branchDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: positionList.length > 0 ? { $and: positionList } : {},
+      },
       { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
       {
         $facet: {

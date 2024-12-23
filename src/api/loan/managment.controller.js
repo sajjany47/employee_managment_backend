@@ -193,10 +193,10 @@ export const AgentList = async (req, res) => {
         },
       },
       {
-        $match:
-          positionList.length > 0
-            ? { $and: [...positionList, { "branchDetails.isActive": true }] }
-            : {},
+        $match: positionList.length > 0 ? { $and: [...positionList] } : {},
+      },
+      {
+        $match: { "branchDetails.isActive": true },
       },
     ]);
 
